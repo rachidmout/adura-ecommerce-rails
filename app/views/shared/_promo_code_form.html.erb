@@ -1,0 +1,15 @@
+<div class="promo-code-box">
+  <% if @promo_code_applied %>
+    <p class="promo-code-active">
+      <%= t("promo_code.applied", code: @promo_code_applied.code) %>
+      <%= button_to t("promo_code.remove"), promo_code_path, method: :delete, class: "text-link" %>
+    </p>
+  <% else %>
+    <%= form_with url: promo_code_path, method: :post, class: "promo-code-form", data: { analytics_hook: "promo-code-form" } do |form| %>
+      <%= form.label :code, t("promo_code.label"), class: "sr-only" %>
+      <%= form.text_field :code, value: @promo_code_input, placeholder: t("promo_code.placeholder") %>
+      <%= form.submit t("promo_code.apply"), class: "button button-secondary" %>
+    <% end %>
+    <% if @promo_code_error %><p class="promo-code-error" role="alert"><%= @promo_code_error %></p><% end %>
+  <% end %>
+</div>

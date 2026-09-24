@@ -1,0 +1,28 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Logistique</p><h1>Configuration livraison</h1></div>
+  <%= link_to "Gérer les zones", admin_shipping_zones_path, class: "button button-primary" %>
+</div>
+
+<p class="admin-page-lead">Préparez les zones, méthodes et tranches de poids. Cette configuration n’est pas encore utilisée par le checkout actuel.</p>
+
+<section class="admin-panel">
+  <div class="admin-panel-head"><div><h2>Emballage</h2><p class="muted">Le poids d’emballage sera ajouté au poids total du panier lorsque le moteur de livraison sera activé.</p></div></div>
+  <%= form_with model: @setting, url: packaging_admin_shipping_configuration_path, method: :patch, class: "admin-form admin-compact-form" do |form| %>
+    <% if @setting.errors.any? %><div class="error-summary"><ul><% @setting.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+    <div class="admin-form-grid">
+      <div class="field"><%= form.label :base_packaging_weight_grams, "Poids d’emballage (g)" %><%= form.number_field :base_packaging_weight_grams, min: 1 %><small class="field-hint">Optionnel : ce poids n’est pas utilisé dans le calcul standard actuel, déjà inclus dans le poids logistique de chaque article.</small></div>
+    </div>
+    <div class="admin-actions"><%= form.submit "Enregistrer", class: "button button-primary" %></div>
+  <% end %>
+</section>
+
+<section class="admin-section">
+  <div class="admin-section-head"><h2>Zones configurées</h2></div>
+  <% if @zones.any? %>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Zone</th><th>État</th><th>Pays</th><th>Méthodes</th><th></th></tr></thead><tbody>
+      <% @zones.each do |zone| %><tr><td><strong><%= zone.name %></strong></td><td><span class="status-pill <%= zone.active? ? "published" : "archived" %>"><%= zone.active? ? "Active" : "Inactive" %></span></td><td><%= zone.shipping_zone_countries.map { |country| ShippingZoneCountry::COUNTRIES[country.country_code] || country.country_code }.to_sentence.presence || "—" %></td><td><%= zone.shipping_methods.count %></td><td><%= link_to "Gérer", admin_shipping_zone_path(zone), class: "text-link" %></td></tr><% end %>
+    </tbody></table></div>
+  <% else %>
+    <div class="admin-table-empty"><p>Aucune zone de livraison n’est configurée.</p><%= link_to "Créer une zone", new_admin_shipping_zone_path, class: "button button-small button-primary" %></div>
+  <% end %>
+</section>

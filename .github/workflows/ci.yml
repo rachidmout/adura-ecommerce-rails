@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      RAILS_ENV: test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/adura_test
+      STRIPE_WEBHOOK_SECRET: test_webhook_secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Prepare database
+        run: bin/rails db:prepare
+      - name: Run tests
+        run: bin/rails test
+      - name: Lint
+        run: bundle exec rubocop --format github
+      - name: Security scan
+        run: bundle exec brakeman --no-pager

@@ -1,0 +1,8 @@
+<% label = case comparison.status
+when :up then "+#{number_to_percentage(comparison.percent_change, precision: 1, strip_insignificant_zeros: true)}"
+when :down then number_to_percentage(comparison.percent_change, precision: 1, strip_insignificant_zeros: true)
+when :neutral then "Stable"
+when :new then "Nouveau"
+else "N/A"
+end %>
+<small class="analytics-comparison analytics-comparison--<%= comparison.status %>"><%= label %> vs période précédente</small>

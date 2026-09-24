@@ -1,0 +1,66 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Catalogue</p><h1>Édition rapide</h1></div>
+  <%= link_to "Vue produits", admin_products_path, class: "button button-secondary" %>
+</div>
+
+<p class="admin-page-lead">Modifiez le prix, le stock physique ou l’état d’une variante. Le stock réservé et le disponible sont calculés par le système et restent protégés.</p>
+
+<%= form_with url: admin_catalog_variants_path, method: :get, data: { controller: "auto-submit" }, class: "admin-filters" do |form| %>
+  <div class="field">
+    <%= form.label :q, "Recherche" %>
+    <%= form.search_field :q, value: params[:q], placeholder: "Produit ou SKU…", data: { action: "keydown.enter->auto-submit#submit" } %>
+  </div>
+  <div class="field">
+    <%= form.label :brand, "Marque" %>
+    <%= form.collection_select :brand, @brands, :id, :name, { include_blank: "Toutes", selected: params[:brand] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :status, "État" %>
+    <%= form.select :status, [ [ "Actives", "active" ], [ "Inactives", "inactive" ] ], { include_blank: "Tous", selected: params[:status] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field admin-filter-check">
+    <%= form.check_box :low_stock, { checked: params[:low_stock] == "1", data: { action: "change->auto-submit#submit" } }, "1", "0" %>
+    <%= form.label :low_stock, "Stock faible (≤ #{ProductVariant::LOW_STOCK_THRESHOLD})" %>
+  </div>
+  <div class="field admin-filter-check">
+    <%= form.check_box :missing_weight, { checked: params[:missing_weight] == "1", data: { action: "change->auto-submit#submit" } }, "1", "0" %>
+    <%= form.label :missing_weight, "Poids manquant" %>
+  </div>
+  <% if params.values_at(:q, :brand, :status).any?(&:present?) || params[:low_stock] == "1" || params[:missing_weight] == "1" %>
+    <%= link_to "Effacer", admin_catalog_variants_path, class: "admin-filter-reset" %>
+  <% end %>
+<% end %>
+
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide admin-quick-edit-table">
+    <thead><tr><th>Produit</th><th>Marque</th><th>Format</th><th>SKU</th><th>Prix TTC</th><th>Poids expédié</th><th>Physique</th><th>Réservé</th><th>Disponible</th><th>État</th><th></th></tr></thead>
+    <tbody>
+      <% @variants.each do |variant| %>
+        <% form_id = dom_id(variant, :quick_edit) %>
+        <tr>
+          <td><strong><%= variant.product.name %></strong></td>
+          <td><%= variant.product.brand.name %></td>
+          <td><span class="format-badge"><%= variant.label %></span></td>
+          <td><code><%= variant.sku %></code></td>
+          <td><%= number_field_tag "product_variant[price_euros]", variant.price_euros, min: 0, step: 0.01, required: true, form: form_id, aria: { label: "Prix TTC de #{variant.sku}" } %></td>
+          <td><%= number_field_tag "product_variant[shipping_weight_grams]", variant.shipping_weight_grams, min: 1, form: form_id, aria: { label: "Poids expédié de #{variant.sku} en grammes" } %></td>
+          <td><%= number_field_tag "product_variant[stock_quantity]", variant.stock_quantity, min: 0, required: true, form: form_id, aria: { label: "Stock physique de #{variant.sku}" } %></td>
+          <td><span class="admin-readonly-value"><%= variant.reserved_stock_quantity %></span></td>
+          <td><strong><%= variant.available_stock_quantity %></strong></td>
+          <td>
+            <%= hidden_field_tag "product_variant[active]", "0", form: form_id %>
+            <label class="admin-inline-check"><%= check_box_tag "product_variant[active]", "1", variant.active?, form: form_id, aria: { label: "Variante #{variant.sku} active" } %><span><%= variant.active? ? "Active" : "Inactive" %></span></label>
+          </td>
+          <td>
+            <%= form_with model: variant, url: admin_catalog_variant_path(variant), method: :patch, id: form_id, class: "admin-inline-form" do |form| %>
+              <%= form.submit "Enregistrer", class: "button button-small button-primary" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @variants.none? %>
+        <tr><td colspan="11" class="admin-table-empty">Aucune variante ne correspond à ces filtres. <%= link_to "Effacer les filtres", admin_catalog_variants_path, class: "text-link" %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

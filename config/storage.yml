@@ -1,0 +1,29 @@
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+r2:
+  service: S3
+  # Valeurs par défaut vides (jamais des secrets) : storage.yml est évalué en
+  # ERB dans son intégralité au boot de Rails, y compris ce bloc, même dans
+  # les environnements (test, development) qui ne sélectionnent jamais le
+  # service "r2" — sans défaut, ENV.fetch y lèverait une erreur au chargement.
+  access_key_id: <%= ENV.fetch("AWS_ACCESS_KEY_ID", "") %>
+  secret_access_key: <%= ENV.fetch("AWS_SECRET_ACCESS_KEY", "") %>
+  region: <%= ENV.fetch("AWS_REGION", "auto") %>
+  bucket: <%= ENV.fetch("AWS_BUCKET", "") %>
+  endpoint: <%= ENV.fetch("AWS_ENDPOINT", "") %>
+  force_path_style: true
+  # Active Storage envoie déjà son propre Content-MD5 sur chaque upload
+  # (ActiveStorage::Service::S3Service#upload_with_single_part). Depuis
+  # aws-sdk-core 3.210+, le SDK calcule *en plus* par défaut un checksum
+  # S3 additionnel (request_checksum_calculation: "when_supported") — R2
+  # refuse la combinaison des deux avec "You can only specify one
+  # non-default checksum at a time". "when_required" restaure le
+  # comportement historique (un seul checksum, celui d'Active Storage).
+  request_checksum_calculation: when_required
+  response_checksum_validation: when_required

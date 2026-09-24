@@ -1,0 +1,34 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Automatisation marketing</p><h1>Vidéos marketing</h1></div>
+</div>
+
+<p class="admin-page-lead">Demandes reçues depuis le GPT marketing. Aucune génération ou publication n’est déclenchée depuis cette page.</p>
+
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead><tr><th>Statut</th><th>Produit</th><th>Angle</th><th>Hook</th><th>Durée</th><th>Créée le</th><th></th></tr></thead>
+    <tbody>
+      <% @marketing_video_jobs.each do |video_job| %>
+        <tr>
+          <td><span class="status-pill <%= video_job.status %>"><%= video_job.queued_for_generation? ? "Prêt pour génération" : video_job.status.humanize %></span><% if video_job.failed? && video_job.error_message.present? %><br><small class="muted"><%= truncate(video_job.error_message, length: 70) %></small><% end %></td>
+          <td><strong><%= video_job.product_name %></strong><br><small class="muted"><%= video_job.product_slug %></small></td>
+          <td><%= video_job.marketing_angle.presence || "—" %></td>
+          <td><%= truncate(video_job.hook, length: 90) %></td>
+          <td><%= video_job.duration_seconds %> s · <%= video_job.aspect_ratio %></td>
+          <td><%= l(video_job.created_at, format: :short) %></td>
+          <td>
+            <%= link_to "Voir", admin_marketing_video_job_path(video_job), class: "text-link" %>
+            <% if video_job.deletable_by_admin? %>
+              <%= button_to "Supprimer", admin_marketing_video_job_path(video_job), method: :delete, class: "text-link danger-link", data: { turbo_confirm: "Supprimer définitivement cette demande vidéo ?" } %>
+            <% else %>
+              <span class="muted">Non supprimable</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @marketing_video_jobs.none? %>
+        <tr><td colspan="7" class="admin-table-empty">Aucune demande vidéo marketing pour le moment.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

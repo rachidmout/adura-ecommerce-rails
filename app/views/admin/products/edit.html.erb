@@ -1,0 +1,84 @@
+<div class="admin-title">
+  <div><p class="eyebrow"><%= @product.brand.name %></p><h1><%= @product.name %></h1></div>
+  <div class="admin-title-actions">
+    <span class="status-pill <%= @product.status %>"><%= @product.status %></span>
+    <%= button_to "Dupliquer", duplicate_admin_product_path(@product), method: :post, class: "button button-secondary", data: { turbo_confirm: "Dupliquer #{@product.name} en brouillon ?" } %>
+  </div>
+</div>
+
+<%= render "form", product: @product %>
+
+<div class="admin-section">
+  <div class="admin-section-head">
+    <h2>Variantes</h2>
+    <%= link_to "Nouvelle variante", new_admin_product_variant_path(@product), class: "text-link" %>
+  </div>
+  <% if @product.product_variants.any? %>
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-table-wide">
+        <thead><tr><th>Format</th><th>SKU</th><th>Prix</th><th>Poids expédié</th><th>Physique</th><th>Réservé</th><th>Disponible</th><th>Image</th><th>État</th><th></th></tr></thead>
+        <tbody>
+          <% @product.product_variants.each do |variant| %>
+            <tr>
+              <td><span class="format-badge"><%= variant.label %></span></td>
+              <td><%= variant.sku %></td>
+              <td><%= money(variant.price_cents) %></td>
+              <td><%= variant.shipping_weight_grams ? "#{variant.shipping_weight_grams} g" : "—" %></td>
+              <td><%= variant.stock_quantity %></td>
+              <td><%= variant.reserved_stock_quantity %></td>
+              <td><strong><%= variant.available_stock_quantity %></strong></td>
+              <td>
+                <% variant_image = variant.product_images.first %>
+                <% if variant_image&.file&.attached? %>
+                  <%= image_tag variant_image.file, class: "admin-thumb", alt: variant_image.alt_text %>
+                <% else %>
+                  <span class="muted">générique</span>
+                <% end %>
+              </td>
+              <td><span class="status-pill <%= variant.active? ? "published" : "archived" %>"><%= variant.active? ? "active" : "inactive" %></span></td>
+              <td>
+                <div class="admin-row-actions">
+                  <%= link_to "Modifier", edit_admin_product_variant_path(@product, variant), class: "text-link" %>
+                  <%= button_to "Dupliquer", duplicate_admin_product_variant_path(@product, variant), method: :post, class: "text-link", data: { turbo_confirm: "Dupliquer le format #{variant.label} avec un stock à zéro ?" } %>
+                  <%= button_to variant.historical? ? "Désactiver" : "Supprimer", admin_product_variant_path(@product, variant), method: :delete, class: "text-link danger-link", data: { turbo_confirm: variant.historical? ? "Désactiver le format #{variant.label} pour préserver son historique ?" : "Supprimer définitivement le format #{variant.label} ?" } %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="admin-table-empty">Aucune variante pour le moment.</p>
+  <% end %>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head">
+    <h2>Galerie d’images</h2>
+    <p>L’ordre défini ici détermine l’ordre affiché sur le site public.</p>
+  </div>
+  <%= render "admin/product_images/gallery", product: @product %>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Publication</h2></div>
+  <div class="admin-form">
+    <ul class="field-hint" style="list-style:disc;padding-left:18px;margin-bottom:20px">
+      <li>Famille principale : <%= @product.primary_family&.name || "manquante" %></li>
+      <li>Profil olfactif : <%= @product.perfume_profile ? "renseigné" : "manquant" %></li>
+      <li>Image principale : <%= @product.primary_image&.file&.attached? ? "renseignée" : "manquante" %></li>
+      <li>Prix minimum : <%= @product.minimum_price_cents ? money(@product.minimum_price_cents) : "—" %></li>
+    </ul>
+    <div class="admin-actions">
+      <% if @product.draft? %>
+        <%= button_to "Publier", publish_admin_product_path(@product), method: :patch, class: "button button-primary" %>
+      <% elsif !@product.archived? %>
+        <%= button_to "Archiver", archive_admin_product_path(@product), method: :patch, class: "button button-secondary", data: { turbo_confirm: "Archiver #{@product.name} et le retirer du site ?" } %>
+      <% end %>
+      <% if @product.published? %>
+        <%= link_to "Voir sur le site", product_path(@product), target: "_blank", rel: "noopener", class: "button button-secondary" %>
+      <% end %>
+    </div>
+  </div>
+</div>

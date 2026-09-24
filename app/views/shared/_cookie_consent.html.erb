@@ -1,0 +1,32 @@
+<section class="cookie-consent" data-cookie-consent-target="banner" role="dialog" aria-modal="false" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-description" hidden>
+  <div class="cookie-consent-card">
+    <div class="cookie-consent-copy">
+      <h2 id="cookie-consent-title"><%= t("cookie_consent.title") %></h2>
+      <p id="cookie-consent-description"><%= t("cookie_consent.description") %></p>
+    </div>
+
+    <div class="cookie-consent-actions">
+      <button type="button" class="button button-primary" data-action="cookie-consent#accept"><%= t("cookie_consent.accept") %></button>
+      <button type="button" class="button button-secondary" data-action="cookie-consent#reject"><%= t("cookie_consent.reject") %></button>
+      <button type="button" class="cookie-consent-preferences-link" data-action="cookie-consent#openPreferences" data-cookie-consent-target="preferencesTrigger" aria-expanded="false"><%= t("cookie_consent.customize") %></button>
+    </div>
+
+    <form class="cookie-consent-preferences" data-cookie-consent-target="preferences" data-action="submit->cookie-consent#save keydown.esc->cookie-consent#closePreferences" hidden>
+      <fieldset>
+        <legend><%= t("cookie_consent.preferences_title") %></legend>
+        <label class="cookie-consent-option">
+          <input type="checkbox" checked disabled>
+          <span><strong><%= t("cookie_consent.necessary") %></strong><small><%= t("cookie_consent.necessary_description") %></small></span>
+        </label>
+        <label class="cookie-consent-option">
+          <input type="checkbox" data-cookie-consent-target="analytics">
+          <span><strong><%= t("cookie_consent.analytics") %></strong><small><%= t("cookie_consent.analytics_description") %></small></span>
+        </label>
+      </fieldset>
+      <div class="cookie-consent-preferences-actions">
+        <button type="submit" class="button button-primary"><%= t("cookie_consent.save") %></button>
+        <button type="button" class="button button-secondary" data-action="cookie-consent#closePreferences"><%= t("cookie_consent.close") %></button>
+      </div>
+    </form>
+  </div>
+</section>

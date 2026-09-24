@@ -1,0 +1,184 @@
+openapi: 3.1.0
+info:
+  title: ADURA Growth Dashboard API
+  version: v1
+  description: >-
+    Read-only aggregated ADURA e-commerce and GA4 analytics. Use this Action to
+    retrieve current performance, funnel, product metrics, traffic sources,
+    landing pages and deterministic insights. Prefer 7d for recent analysis,
+    30d for trends, and use today cautiously because volumes can be low.
+servers:
+  - url: https://adura.store
+paths:
+  /api/v1/growth/dashboard:
+    get:
+      operationId: getAduraGrowthDashboard
+      summary: Retrieve the ADURA Growth Dashboard
+      description: >-
+        Returns read-only aggregated business KPIs from ADURA and behavioral
+        metrics from GA4. It never returns customer, order, payment or secret data.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: Reporting period. Defaults to 7d.
+          schema:
+            type: string
+            enum: [today, 7d, 30d]
+            default: 7d
+      responses:
+        '200':
+          description: Aggregated analytics dashboard.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowthDashboard'
+        '400':
+          description: Unsupported period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_period
+        '401':
+          description: Missing, malformed or incorrect bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: unauthorized
+        '500':
+          description: Unexpected internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: internal_error
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API token
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [unauthorized, invalid_period, internal_error]
+    GrowthDashboard:
+      type: object
+      required: [meta, business, ga4, funnel, products, traffic_sources, landing_pages, insights]
+      properties:
+        meta:
+          type: object
+          properties:
+            api_version: { type: string, example: v1 }
+            period: { type: string, enum: [today, 7d, 30d] }
+            start_date: { type: string, format: date }
+            end_date: { type: string, format: date }
+            generated_at: { type: string, format: date-time }
+            timezone: { type: string, example: Europe/Paris }
+            ga4_status: { type: string, enum: [available, stale, unavailable, not_configured] }
+            ga4_fallback: { type: boolean }
+            ga4_advanced_status: { type: string, enum: [available, partial, stale, unavailable, not_configured] }
+            ga4_advanced_message: { type: [string, 'null'] }
+        business:
+          type: object
+          description: Official business data from the ADURA database.
+          properties:
+            source: { type: string, const: adura_database }
+            revenue_eur: { type: number }
+            orders: { type: integer }
+            paid_orders: { type: integer }
+            average_order_value_eur: { type: number }
+            customers: { type: integer }
+            items_sold: { type: integer }
+            comparison: { type: object }
+        ga4:
+          type: object
+          description: Behavioral GA4 data, not official accounting revenue.
+          properties:
+            source: { type: string, const: ga4 }
+            status: { type: string }
+            users: { type: integer }
+            sessions: { type: integer }
+            page_views: { type: integer }
+            purchases: { type: integer }
+            conversion_rate: { type: number }
+            comparison: { type: object }
+        funnel:
+          type: object
+          properties:
+            steps:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  label: { type: string }
+                  count: { type: integer }
+                  pass_rate: { type: [number, 'null'] }
+                  overall_rate: { type: [number, 'null'] }
+                  loss: { type: [integer, 'null'] }
+                  loss_rate: { type: [number, 'null'] }
+            biggest_drop:
+              type: [object, 'null']
+              properties:
+                from: { type: string }
+                to: { type: string }
+                loss: { type: integer }
+                loss_rate: { type: number }
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              item_id: { type: string }
+              item_name: { type: string }
+              views: { type: integer }
+              add_to_cart: { type: integer }
+              purchases_ga4: { type: integer }
+              item_revenue_ga4_eur: { type: number }
+              add_to_cart_rate: { type: [number, 'null'] }
+              purchase_rate: { type: [number, 'null'] }
+        traffic_sources:
+          type: array
+          items:
+            type: object
+            properties:
+              source: { type: string }
+              medium: { type: [string, 'null'] }
+              source_medium: { type: string }
+              sessions: { type: integer }
+              users: { type: integer }
+              purchases_ga4: { type: integer }
+              conversion_rate: { type: [number, 'null'] }
+              revenue_ga4_eur: { type: number }
+        landing_pages:
+          type: array
+          items:
+            type: object
+            properties:
+              landing_page: { type: string }
+              sessions: { type: integer }
+              users: { type: integer }
+              engagement_rate: { type: number }
+              purchases_ga4: { type: integer }
+              conversion_rate: { type: [number, 'null'] }
+              revenue_ga4_eur: { type: number }
+        insights:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              severity: { type: string, enum: [warning, notice] }
+              message: { type: string }

@@ -1,0 +1,14 @@
+<section class="form-section checkout-pickup-points" data-pickup-point-target="section" hidden>
+  <h2><%= t("checkouts.new.relay_heading") %></h2>
+  <p class="checkout-pickup-status" aria-live="polite" data-pickup-point-target="status"><%= t("checkouts.new.relay_select_method") %></p>
+  <input type="hidden" name="relay_point_id" data-pickup-point-target="selectedId">
+  <button type="button" class="button button-secondary checkout-pickup-search" data-pickup-point-target="searchButton" data-action="pickup-point#search"><%= t("checkouts.new.relay_search") %></button>
+  <div class="checkout-pickup-results" data-pickup-point-target="results"></div>
+  <div class="checkout-pickup-selected" data-pickup-point-target="selection" hidden>
+    <div class="checkout-pickup-selected__content">
+      <p class="checkout-pickup-selected__label"><%= t("checkouts.new.relay_selected") %></p>
+      <div class="checkout-pickup-selected__details" data-pickup-point-target="selectedDetails"></div>
+    </div>
+    <button type="button" class="button button-secondary checkout-pickup-selected__change" data-action="pickup-point#change"><%= t("checkouts.new.relay_change") %></button>
+  </div>
+</section>

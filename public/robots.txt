@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /admin
+Disallow: /panier
+Disallow: /articles-panier
+Disallow: /code-promo
+Disallow: /commande
+Disallow: /commandes/
+Allow: /
+
+Sitemap: https://adura.store/sitemap.xml

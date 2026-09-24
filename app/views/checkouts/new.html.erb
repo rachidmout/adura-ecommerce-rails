@@ -1,0 +1,52 @@
+<% content_for :title, t("checkouts.new.title") %>
+<% field_error = ->(attribute) { @order.errors[attribute].any? ? content_tag(:small, @order.errors[attribute].to_sentence, class: "checkout-field-error") : "" } %>
+<% analytics_checkout_event = analytics_ecommerce_event(items: @lines.map { |line| analytics_ecommerce_item(product: line.product, variant: line.variant, quantity: line.quantity) }, value_cents: @subtotal_cents) %>
+<% shipping_methods_enabled = Checkout::ShippingMethodsFeature.enabled? %>
+<% payment_disabled = shipping_methods_enabled && (@selected_shipping_method.nil? || @selected_shipping_method.kind == "pickup_point") %>
+<% payment_amount = @shipping_unavailable ? "—" : money(@total_cents) %>
+<% payment_button_data = { checkout_submission_target: "submit", analytics_hook: "checkout-submit" } %>
+<% sticky_payment_button_data = payment_button_data.dup %>
+<% if shipping_methods_enabled %>
+  <% payment_button_data[:shipping_methods_target] = "submit desktopSubmit" %>
+  <% sticky_payment_button_data[:shipping_methods_target] = "submit stickySubmit" %>
+<% end %>
+<section class="checkout-page shell" data-controller="checkout-submission address-lookup ecommerce-analytics<%= " shipping-methods pickup-point" if shipping_methods_enabled %>" data-checkout-submission-submitting-label-value="<%= t("checkouts.new.submitting_cta") %>" data-address-lookup-url-value="<%= address_cities_path %>" data-address-lookup-autofilled-message-value="<%= t("checkouts.new.city_autofilled") %>" data-address-lookup-searching-message-value="<%= t("checkouts.new.city_searching") %>" data-address-lookup-not-found-message-value="<%= t("checkouts.new.city_not_found") %>" data-address-lookup-multiple-message-value="<%= t("checkouts.new.city_multiple") %>" data-address-lookup-placeholder-value="<%= t("checkouts.new.city_suggestions_placeholder") %>" data-ecommerce-analytics-begin-checkout-value="<%= analytics_checkout_event.to_json %>"<% if @analytics_promo_event %> data-ecommerce-analytics-promo-value="<%= @analytics_promo_event.to_json %>"<% end %><% if shipping_methods_enabled %> data-action="shipping-methods:selected->pickup-point#shippingMethodChanged pickup-point:selected->shipping-methods#pickupPointSelected pickup-point:cleared->shipping-methods#pickupPointCleared" data-shipping-methods-url-value="<%= shipping_options_checkout_path %>" data-shipping-methods-subtotal-cents-value="<%= @subtotal_cents %>" data-shipping-methods-discount-cents-value="<%= @discount_cents %>" data-shipping-methods-country-required-message-value="<%= t("checkouts.new.select_country_and_shipping_method") %>" data-shipping-methods-pay-cta-template-value="<%= t("checkouts.new.pay_cta", amount: "__amount__") %>" data-shipping-methods-sticky-pay-cta-template-value="<%= t("checkouts.new.sticky_pay_cta", amount: "__amount__") %>" data-shipping-methods-refreshing-message-value="<%= t("checkouts.new.shipping_refreshing") %>" data-shipping-methods-choose-message-value="<%= t("checkouts.new.shipping_choose") %>" data-shipping-methods-none-message-value="<%= t("checkouts.new.shipping_none") %>" data-shipping-methods-unavailable-message-value="<%= t("checkouts.new.shipping_options_unavailable") %>" data-shipping-methods-free-label-value="<%= t("order_summary.free_shipping") %>" data-shipping-methods-to-select-label-value="<%= t("checkouts.new.shipping_to_select") %>" data-shipping-methods-currency-locale-value="<%= I18n.locale %>" data-pickup-point-search-url-value="<%= relay_points_checkout_path %>" data-pickup-point-searching-message-value="<%= t("checkouts.new.relay_searching") %>" data-pickup-point-select-method-message-value="<%= t("checkouts.new.relay_select_method") %>" data-pickup-point-choose-another-message-value="<%= t("checkouts.new.relay_choose_another") %>" data-pickup-point-search-again-label-value="<%= t("checkouts.new.relay_search_again") %>" data-pickup-point-address-changed-message-value="<%= t("checkouts.new.relay_address_changed") %>" data-pickup-point-unavailable-message-value="<%= t("checkouts.new.relay_unavailable") %>" data-pickup-point-choose-label-value="<%= t("checkouts.new.relay_choose") %>"<% end %>>
+  <div class="checkout-heading"><p class="eyebrow"><%= t("checkouts.new.eyebrow") %></p><h1><%= t("checkouts.new.heading") %></h1><p><%= t("checkouts.new.lead") %></p></div>
+  <div class="checkout-layout">
+    <%= form_with model: @order, url: checkout_path, id: "checkout-form", class: "checkout-form", data: { turbo: false, action: "submit->checkout-submission#submit" } do |form| %>
+      <% if @order.errors.any? %><div class="error-summary" role="alert"><h2><%= t("checkouts.new.error_summary") %></h2><ul><% @order.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+
+      <div class="form-section"><h2><%= t("checkouts.new.shipping_heading") %></h2><div class="form-grid">
+        <label class="full"><%= t("checkouts.new.country") %><%= form.select :country_code, @checkout_country_codes.map { |code| [ t("countries.#{code}", default: ShippingZoneCountry::COUNTRIES.fetch(code, code)), code ] }, { prompt: (shipping_methods_enabled ? t("checkouts.new.country_prompt") : nil) }, autocomplete: "country", required: true, data: { address_lookup_target: "country", action: "change->address-lookup#countryChanged change->pickup-point#addressChanged" } %><%= field_error.call(:country_code) %></label>
+      </div></div>
+
+      <div class="form-section"><h2><%= t("checkouts.new.contact_heading") %></h2><div class="form-grid">
+        <label><%= t("checkouts.new.first_name") %><%= form.text_field :first_name, autocomplete: "given-name", required: true %><%= field_error.call(:first_name) %></label>
+        <label><%= t("checkouts.new.last_name") %><%= form.text_field :last_name, autocomplete: "family-name", required: true %><%= field_error.call(:last_name) %></label>
+      </div></div>
+
+      <div class="form-section"><h2><%= t("checkouts.new.address_heading") %></h2><div class="form-grid">
+        <label class="full"><%= t("checkouts.new.address_line1") %><%= form.text_field :address_line1, autocomplete: "street-address", required: true, data: { action: "input->pickup-point#addressChanged" } %><%= field_error.call(:address_line1) %></label>
+        <label class="full"><%= t("checkouts.new.address_line2") %><span class="checkout-optional"><%= t("checkouts.new.optional") %></span><%= form.text_field :address_line2, autocomplete: "address-line2" %></label>
+        <label><%= t("checkouts.new.postal_code") %><%= form.text_field :postal_code, autocomplete: "postal-code", inputmode: "numeric", required: true, data: { address_lookup_target: "postalCode", action: "input->address-lookup#postalCodeChanged input->pickup-point#addressChanged" } %><%= field_error.call(:postal_code) %></label>
+        <label><%= t("checkouts.new.city") %><%= form.text_field :city, autocomplete: "address-level2", required: true, data: { address_lookup_target: "city", action: "input->pickup-point#addressChanged" } %><%= field_error.call(:city) %></label>
+        <div class="checkout-city-suggestions full"><label for="checkout-city-choices"><%= t("checkouts.new.city_suggestions") %></label><select id="checkout-city-choices" hidden data-address-lookup-target="choices" data-action="change->address-lookup#citySelected"><option value=""><%= t("checkouts.new.city_suggestions_placeholder") %></option></select><p aria-live="polite" data-address-lookup-target="status"></p></div>
+      </div></div>
+
+      <div class="form-section"><h2><%= t("checkouts.new.contact_details_heading") %></h2><div class="form-grid">
+        <label class="full"><%= t("checkouts.new.phone") %><%= form.telephone_field :phone, autocomplete: "tel", required: true %><%= field_error.call(:phone) %></label>
+        <label class="full"><%= t("checkouts.new.email") %><%= form.email_field :email, autocomplete: "email", required: true %><%= field_error.call(:email) %></label>
+      </div></div>
+
+      <% if shipping_methods_enabled %><%= render "shipping_methods", shipping_quote: @shipping_quote, selected_shipping_method: @selected_shipping_method, shipping_error: @shipping_error %><% end %>
+
+      <div class="terms-check" data-analytics-hook="checkout-terms">
+        <%= check_box_tag :terms_accepted, "1", false, required: true, class: "terms-check-input" %>
+        <div class="terms-check-copy"><%= label_tag :terms_accepted, t("checkouts.new.terms_prefix"), class: "terms-check-label" %><%= link_to t("checkouts.new.terms_link"), terms_path, target: "_blank", rel: "noopener noreferrer" %>.</div>
+      </div>
+    <% end %>
+    <aside class="order-summary checkout-summary"><h2><%= t("checkouts.new.order_summary") %></h2><ul><% @lines.each do |line| %><li><span><%= line.quantity %> × <%= line.product.name %><small><%= line.variant.label %></small></span><strong><%= money(line.line_total_cents) %></strong></li><% end %></ul><div class="checkout-promo" data-analytics-hook="checkout-promo"><% if @promo_code_applied %><%= render "shared/promo_code_form" %><% else %><details><summary><%= t("checkouts.new.add_promo") %></summary><%= render "shared/promo_code_form" %></details><% end %></div><%= render "shared/order_summary_totals" %><%= render "shared/purchase_reassurance" %><%= button_tag t("checkouts.new.pay_cta", amount: payment_amount), type: "submit", form: "checkout-form", class: "button button-primary checkout-button", disabled: payment_disabled, data: payment_button_data %><p class="purchase-note"><%= t("checkouts.new.redirect_note") %></p></aside>
+  </div>
+  <div class="checkout-sticky-submit" data-analytics-hook="checkout-submit"><div><span><%= @shipping_unavailable ? t("checkouts.new.total_pending") : t("checkouts.new.total") %></span><strong<% if shipping_methods_enabled %> data-shipping-methods-target="stickyTotal"<% end %>><%= @shipping_unavailable ? "—" : money(@total_cents) %></strong><small><%= t("checkouts.new.secure_payment") %></small></div><%= button_tag t("checkouts.new.sticky_pay_cta", amount: payment_amount), type: "submit", form: "checkout-form", class: "button button-primary", disabled: payment_disabled, data: sticky_payment_button_data %></div>
+  <div class="checkout-sticky-page-spacer" aria-hidden="true"></div>
+</section>

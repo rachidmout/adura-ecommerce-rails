@@ -1,0 +1,32 @@
+<% content_for :title, t("home.index.meta_title") %>
+<% content_for :meta_description, t("home.index.meta_description") %>
+<section class="hero shell">
+  <div class="hero-copy">
+    <p class="eyebrow"><%= t("home.index.eyebrow") %></p>
+    <h1><%= t("home.index.title") %></h1>
+    <p class="hero-lead"><%= t("home.index.lead") %></p>
+    <div class="button-row"><%= link_to t("home.index.cta_primary"), quiz_path, class: "button button-primary" %><%= link_to t("home.index.cta_secondary"), products_path, class: "button button-secondary" %></div>
+    <div class="hero-proof"><span><strong><%= Product.visible.count %></strong> <%= t("home.index.proof.references") %></span><span><strong><%= OlfactoryFamily.active.count %></strong> <%= t("home.index.proof.families") %></span><span><strong>0</strong> <%= t("home.index.proof.jargon") %></span></div>
+  </div>
+  <div class="hero-art" aria-label="<%= t("home.index.hero_art.aria") %>">
+    <span class="hero-spark hero-spark-one" aria-hidden="true">✦</span>
+    <span class="hero-spark hero-spark-two" aria-hidden="true">✦</span>
+    <p class="hero-art-kicker"><%= t("home.index.hero_art.kicker") %></p>
+    <% if (product = @hero_products[:yara]) %><%= link_to product_path(product), class: "hero-product hero-product-yara", aria: { label: "#{t('products.show.view_image')} #{product.name} #{product.product_variants.first&.label} · #{product.brand.name}" } do %><%= image_tag "home/yara-lattafa-100ml.webp", alt: "#{t('home.index.hero_art.bottle')} #{product.name} · #{product.brand.name}", width: "250", height: "571" %><span><strong><%= product.name %></strong><small><%= product.brand.name %> · <%= product.product_variants.first&.label %></small></span><% end %><% end %>
+    <% if (product = @hero_products[:marshmallow]) %><%= link_to product_path(product), class: "hero-product hero-product-marshmallow", aria: { label: "#{t('products.show.view_image')} #{product.name} #{product.product_variants.first&.label} · #{product.brand.name}" } do %><%= image_tag "home/kenzie-marshmallow-dream-100ml.webp", alt: "#{t('home.index.hero_art.bottle')} #{product.name} · #{product.brand.name}", width: "410", height: "760", loading: "eager", fetchpriority: "high" %><span><strong><%= product.name %></strong><small><%= product.brand.name %> · <%= product.product_variants.first&.label %></small></span><% end %><% end %>
+    <% if (product = @hero_products[:vanilla]) %><%= link_to product_path(product), class: "hero-product hero-product-vanilla", aria: { label: "#{t('products.show.view_image')} #{product.name} #{product.product_variants.first&.label} · #{product.brand.name}" } do %><%= image_tag "home/vanilla-latte-gulf-orchid-100ml.webp", alt: "#{t('home.index.hero_art.bottle')} #{product.name} · #{product.brand.name}", width: "421", height: "760" %><span><strong><%= product.name %></strong><small><%= product.brand.name %> · <%= product.product_variants.first&.label %></small></span><% end %><% end %>
+  </div>
+</section>
+<section class="trust-strip" aria-label="<%= t("home.index.trust_strip.title") %>">
+  <h2 class="sr-only"><%= t("home.index.trust_strip.title") %></h2>
+  <ul class="shell">
+    <li><span class="trust-icon-badge"><%= trust_icon(:catalog) %></span><span><strong><%= t("home.index.trust_strip.catalog.title") %></strong><small><%= t("home.index.trust_strip.catalog.text") %></small></span></li>
+    <li><span class="trust-icon-badge"><%= trust_icon(:delivery) %></span><span><strong><%= t("home.index.trust_strip.delivery.title") %></strong><small><%= t("home.index.trust_strip.delivery.text") %></small></span></li>
+    <li><span class="trust-icon-badge"><%= trust_icon(:authentic) %></span><span><strong><%= t("home.index.trust_strip.authentic.title") %></strong><small><%= t("home.index.trust_strip.authentic.text") %></small></span></li>
+    <li><span class="trust-icon-badge"><%= trust_icon(:advice) %></span><span><strong><%= t("home.index.trust_strip.advice.title") %></strong><small><%= t("home.index.trust_strip.advice.text") %></small></span></li>
+  </ul>
+</section>
+<section class="family-strip"><div class="shell"><p class="eyebrow"><%= t("home.index.explore") %></p><div class="family-links"><% OlfactoryFamily.active.limit(6).each do |family| %><%= link_to family_catalog_path(slug: family.slug) do %><%= family_icon(family) %><%= translated_family_name(family) %><% end %><% end %></div></div></section>
+<section class="section shell"><div class="section-heading"><div><p class="eyebrow"><%= t("home.index.selection.eyebrow") %></p><h2><%= t("home.index.selection.title") %></h2></div><%= link_to t("home.index.selection.cta"), products_path, class: "text-link" %></div><div class="product-grid"><%= render partial: "products/card", collection: @featured_products, as: :product %></div></section>
+<section class="quiz-panel shell"><div class="quiz-panel-copy"><p class="eyebrow eyebrow-light"><%= t("home.index.quiz.eyebrow") %></p><h2><%= t("home.index.quiz.title") %></h2><p><%= t("home.index.quiz.lead") %></p><%= link_to t("home.index.quiz.cta"), quiz_path, class: "button button-light" %></div><ol class="quiz-preview"><li><span>01</span><div><strong><%= t("home.index.quiz.step1_title") %></strong><small><%= t("home.index.quiz.step1_text") %></small></div></li><li><span>02</span><div><strong><%= t("home.index.quiz.step2_title") %></strong><small><%= t("home.index.quiz.step2_text") %></small></div></li><li><span>03</span><div><strong><%= t("home.index.quiz.step3_title") %></strong><small><%= t("home.index.quiz.step3_text") %></small></div></li></ol></section>
+<section class="section shell commitments"><div class="section-heading compact"><div><p class="eyebrow"><%= t("home.index.responsible.eyebrow") %></p><h2><%= t("home.index.responsible.title") %></h2></div></div><div class="commitment-grid"><article><span>01</span><h3><%= t("home.index.responsible.data_title") %></h3><p><%= t("home.index.responsible.data_text") %></p></article><article><span>02</span><h3><%= t("home.index.responsible.explained_title") %></h3><p><%= t("home.index.responsible.explained_text") %></p></article><article><span>03</span><h3><%= t("home.index.responsible.payment_title") %></h3><p><%= t("home.index.responsible.payment_text") %></p></article></div></section>

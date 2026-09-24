@@ -1,0 +1,10 @@
+<section class="admin-panel" style="margin-top:0">
+  <div class="admin-panel-head"><div><h3><%= title %></h3></div></div>
+  <% if rows.any? %>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Segment</th><th>Sessions</th><th>Utilisateurs</th></tr></thead><tbody>
+      <% rows.each do |row| %><tr><td><%= row[:name] %></td><td><strong><%= row[:sessions] %></strong></td><td><%= row[:active_users] %></td></tr><% end %>
+    </tbody></table></div>
+  <% else %>
+    <p class="admin-table-empty">Aucune donnée sur cette période.</p>
+  <% end %>
+</section>

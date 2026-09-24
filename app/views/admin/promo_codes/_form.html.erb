@@ -1,0 +1,39 @@
+<%= form_with model: [ :admin, promo_code ], class: "admin-form" do |form| %>
+  <% if promo_code.errors.any? %>
+    <div class="error-summary"><h2>Le code promo n’a pas été enregistré :</h2><ul><% promo_code.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div>
+  <% end %>
+
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Règles du code</h2><p>Définissez la remise et ses limites d’utilisation.</p></div>
+    <div class="admin-form-grid">
+    <div class="field"><%= form.label :code, "Code" %><%= form.text_field :code, required: true, placeholder: "ADURA10" %></div>
+    <div class="field"><%= form.label :discount_type, "Type de remise" %><%= form.select :discount_type, [ [ "Pourcentage", "percentage" ], [ "Montant fixe", "fixed_amount" ] ] %></div>
+    <div class="field"><%= form.label :discount_value, "Valeur (pourcentage 1-100, ou centimes si montant fixe)" %><%= form.number_field :discount_value, min: 1, required: true %></div>
+    <div class="field"><%= form.label :active, "Active" %><%= form.check_box :active %></div>
+    <div class="field"><%= form.label :starts_at, "Date de début" %><%= form.date_field :starts_at %></div>
+    <div class="field"><%= form.label :ends_at, "Date de fin" %><%= form.date_field :ends_at %></div>
+    <div class="field"><%= form.label :max_uses, "Nombre maximum d’utilisations" %><%= form.number_field :max_uses, min: 1, placeholder: "Illimité" %></div>
+    <div class="field"><%= form.label :max_uses_per_customer, "Maximum par client" %><%= form.number_field :max_uses_per_customer, min: 1, placeholder: "Illimité" %></div>
+    <div class="field"><%= form.label :min_order_cents, "Montant minimum de commande (centimes)" %><%= form.number_field :min_order_cents, min: 1, placeholder: "Aucun minimum" %></div>
+    </div>
+  </div>
+
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Ciblage (optionnel)</h2><p>Laissez vide pour un code valable sur tout le catalogue.</p></div>
+    <div class="admin-notes-grid" style="grid-template-columns:1fr 1fr">
+    <div class="field">
+      <%= label_tag "promo_code_product_ids", "Produits concernés" %>
+      <%= select_tag "promo_code[product_ids][]", options_from_collection_for_select(Product.order(:name), :id, :name, promo_code.product_ids), multiple: true %>
+    </div>
+    <div class="field">
+      <%= label_tag "promo_code_olfactory_family_ids", "Familles concernées" %>
+      <%= select_tag "promo_code[olfactory_family_ids][]", options_from_collection_for_select(OlfactoryFamily.active, :id, :name, promo_code.olfactory_family_ids), multiple: true %>
+    </div>
+    </div>
+  </div>
+
+  <div class="admin-actions">
+    <%= form.submit "Enregistrer", class: "button button-primary" %>
+    <%= link_to "Annuler", admin_promo_codes_path, class: "button button-secondary" %>
+  </div>
+<% end %>

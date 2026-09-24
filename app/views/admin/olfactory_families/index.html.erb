@@ -1,0 +1,25 @@
+<div class="admin-title"><div><p class="eyebrow">SEO</p><h1>Familles olfactives</h1></div></div>
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead><tr><th>Famille</th><th>Titre SEO</th><th>Meta description</th><th></th></tr></thead>
+    <tbody>
+      <% @olfactory_families.each do |family| %>
+        <tr>
+          <td><strong><%= family.name %></strong><br><small class="muted"><%= family.slug %></small></td>
+          <td>
+            <%= family_meta_title(family) %>
+            <% if family.meta_title.blank? %><br><small class="muted">Valeur active I18n</small><% end %>
+          </td>
+          <td>
+            <%= family_meta_description(family) %>
+            <% if family.meta_description.blank? %><br><small class="muted">Valeur active I18n</small><% end %>
+          </td>
+          <td><%= link_to "Modifier", edit_admin_olfactory_family_path(family), class: "text-link" %></td>
+        </tr>
+      <% end %>
+      <% if @olfactory_families.none? %>
+        <tr><td colspan="4" class="admin-table-empty">Aucune famille olfactive disponible pour le moment.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

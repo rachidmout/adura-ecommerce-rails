@@ -1,0 +1,34 @@
+<div class="admin-title">
+  <div><p class="eyebrow"><%= link_to "← #{@product.name}", edit_admin_product_path(@product), class: "text-link" %></p><h1>Variantes</h1></div>
+  <%= link_to "Nouvelle variante", new_admin_product_variant_path(@product), class: "button button-primary" %>
+</div>
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead><tr><th>SKU</th><th>GTIN</th><th>Format</th><th>Prix</th><th>Poids expédié</th><th>Physique</th><th>Réservé</th><th>Disponible</th><th>État</th><th></th></tr></thead>
+    <tbody>
+      <% @variants.each do |variant| %>
+        <tr>
+          <td><%= variant.sku %></td>
+          <td><%= variant.gtin || "—" %></td>
+          <td><span class="format-badge"><%= variant.label %></span></td>
+          <td><%= money(variant.price_cents) %></td>
+          <td><%= variant.shipping_weight_grams ? "#{variant.shipping_weight_grams} g" : "—" %></td>
+          <td><%= variant.stock_quantity %></td>
+          <td><%= variant.reserved_stock_quantity %></td>
+          <td><strong><%= variant.available_stock_quantity %></strong></td>
+          <td><span class="status-pill <%= variant.active? ? "published" : "archived" %>"><%= variant.active? ? "active" : "inactive" %></span></td>
+          <td>
+            <div class="admin-row-actions">
+              <%= link_to "Modifier", edit_admin_product_variant_path(@product, variant), class: "text-link" %>
+              <%= button_to "Dupliquer", duplicate_admin_product_variant_path(@product, variant), method: :post, class: "text-link", data: { turbo_confirm: "Dupliquer le format #{variant.label} avec un stock à zéro ?" } %>
+              <%= button_to variant.historical? ? "Désactiver" : "Supprimer", admin_product_variant_path(@product, variant), method: :delete, class: "text-link danger-link", data: { turbo_confirm: variant.historical? ? "Désactiver le format #{variant.label} pour préserver son historique ?" : "Supprimer définitivement le format #{variant.label} ?" } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @variants.none? %>
+        <tr><td colspan="10" class="admin-table-empty"><p>Aucune variante pour ce produit.</p><%= link_to "Créer une variante", new_admin_product_variant_path(@product), class: "button button-small button-primary" %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

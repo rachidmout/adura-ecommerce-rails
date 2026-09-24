@@ -1,0 +1,215 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Commande <%= @order.public_token.first(8).upcase %></p><h1><%= @order.customer_name %></h1><span class="status-pill <%= @order.status %>"><%= order_status_label(@order.status) %></span></div>
+  <div class="admin-title-actions">
+    <% if @order.paid? %>
+      <%= button_to "Marquer en préparation", prepare_admin_order_path(@order), method: :patch, class: "button button-secondary", data: { turbo_confirm: "Marquer cette commande en préparation ?" } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="admin-grid">
+  <article class="admin-card"><span>Sous-total</span><strong><%= money(@order.subtotal_cents) %></strong></article>
+  <article class="admin-card"><span>Livraison</span><strong><%= money(@order.shipping_cents) %></strong></article>
+  <article class="admin-card"><span>Total</span><strong><%= money(@order.total_cents) %></strong></article>
+  <article class="admin-card"><span>Articles</span><strong><%= @order.order_items.sum(&:quantity) %></strong></article>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Logistique</h2></div>
+  <div class="admin-form">
+    <div class="admin-form-grid">
+      <div><p class="field-hint">Paiement confirmé le</p><p><%= @order.paid_at ? l(@order.paid_at, format: :short) : "—" %></p></div>
+      <div><p class="field-hint">Mise en préparation le</p><p><%= @order.preparing_at ? l(@order.preparing_at, format: :short) : "—" %></p></div>
+      <div><p class="field-hint">Zone choisie au checkout</p><p><%= @order.shipping_zone_name.presence || "—" %></p></div>
+      <div><p class="field-hint">Méthode choisie au checkout</p><p><%= @order.shipping_method_name.presence || "—" %></p></div>
+      <div><p class="field-hint">Type de livraison</p><p><%= @order.relay_point ? "Point relais" : "À domicile" %></p></div>
+      <div><p class="field-hint">Transporteur commercial</p><p><%= @order.shipping_carrier_name.presence || "—" %></p></div>
+      <div><p class="field-hint">Poids colis</p><p><%= @order.shipping_weight_grams.present? ? "#{@order.shipping_weight_grams} g" : "—" %></p></div>
+      <div><p class="field-hint">Expédiée le</p><p><%= @order.shipped_at ? l(@order.shipped_at, format: :short) : "—" %></p></div>
+      <div><p class="field-hint">Transporteur d’expédition</p><p><%= @order.shipping_carrier.presence || "—" %></p></div>
+      <div>
+        <p class="field-hint">Numéro de suivi</p>
+        <p>
+          <%= @order.tracking_number.presence || "—" %>
+          <% if (tracking_url = safe_tracking_url(@order)) %><br><%= link_to "Suivre le colis", tracking_url, class: "text-link", target: "_blank", rel: "noopener" %><% end %>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (relay_point = @order.relay_point) %>
+  <div class="admin-section">
+    <div class="admin-section-head"><h2>Point relais choisi</h2><p>Cette adresse est distincte des coordonnées de la cliente.</p></div>
+    <div class="admin-form">
+      <div class="admin-form-grid">
+        <div><p class="field-hint">Transporteur</p><p><%= relay_point.carrier %></p></div>
+        <div><p class="field-hint">Code relais</p><p><code><%= relay_point.relay_id %></code></p></div>
+        <div><p class="field-hint">Point relais</p><p><strong><%= relay_point.relay_name %></strong><br><%= simple_format(relay_point.formatted_address, {}, wrapper_tag: "span") %></p></div>
+        <% if relay_point.relay_opening_hours.present? %><div><p class="field-hint">Horaires</p><p><%= relay_point.relay_opening_hours %></p></div><% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% shipment = @order.shipment %>
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Expédition</h2><p>Créez l’expédition après paiement, puis marquez la commande comme expédiée lorsque le colis est remis au transporteur.</p></div>
+  <% if shipment %>
+    <div class="admin-form">
+      <div class="admin-form-grid">
+        <div><p class="field-hint">Statut</p><p><span class="status-pill <%= shipment.status %>"><%= shipment_status_label(shipment.status) %></span></p></div>
+        <div><p class="field-hint">Transporteur</p><p><%= shipment.carrier %></p></div>
+        <div><p class="field-hint">Service</p><p><%= shipment.service %></p></div>
+        <div><p class="field-hint">Référence transporteur</p><p><code><%= shipment.carrier_shipment_id.presence || "—" %></code></p></div>
+        <div>
+          <p class="field-hint">Suivi</p>
+          <p>
+            <%= shipment.tracking_number.presence || "—" %>
+            <% if (shipment_tracking_url = safe_shipment_tracking_url(shipment)) %><br><%= link_to "Suivre le colis", shipment_tracking_url, class: "text-link", target: "_blank", rel: "noopener noreferrer" %><% end %>
+          </p>
+        </div>
+        <div>
+          <p class="field-hint">Étiquette</p>
+          <p>
+            <% if shipment.label.attached? %>
+              <%= link_to "Télécharger l’étiquette PDF", url_for(shipment.label), class: "text-link", target: "_blank", rel: "noopener noreferrer" %>
+            <% elsif (label_url = safe_shipment_label_url(shipment)) %>
+              <%= link_to "Ouvrir l’étiquette PDF", label_url, class: "text-link", target: "_blank", rel: "noopener noreferrer" %>
+            <% else %>
+              —
+            <% end %>
+          </p>
+        </div>
+      </div>
+      <% if shipment.failed? %>
+        <p class="flash flash-alert"><strong>Création non aboutie :</strong> <%= shipment.error_message %></p>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="admin-table-empty">Aucune expédition n’a encore été créée.</p>
+  <% end %>
+
+  <div class="admin-form-actions">
+    <% if shipment&.failed? %>
+      <%= button_to "Réessayer la création", retry_shipment_admin_order_path(@order), method: :post, class: "button button-primary", data: { turbo_confirm: "Réessayer la création de l’expédition ?" } %>
+    <% elsif shipment&.ready? && (@order.paid? || @order.preparing?) %>
+      <%= button_to "Marquer comme expédiée", ship_admin_order_path(@order), method: :patch, params: { shipment: { use_created_shipment: "1" } }, class: "button button-primary", data: { turbo_confirm: "Marquer cette commande comme expédiée avec le suivi créé ?" } %>
+    <% elsif shipment.nil? && (@order.paid? || @order.preparing?) %>
+      <%= button_to "Créer l’expédition", create_shipment_admin_order_path(@order), method: :post, class: "button button-primary", data: { turbo_confirm: "Créer une expédition pour cette commande ?" } %>
+    <% end %>
+  </div>
+</div>
+
+<% if @order.paid? || @order.preparing? %>
+  <div class="admin-section">
+    <div class="admin-section-head"><h2>Expédition manuelle</h2><p>Utilisez cette option si l’expédition a été créée hors de l’application.</p></div>
+    <%= form_with url: ship_admin_order_path(@order), method: :patch, class: "admin-form" do %>
+      <div class="admin-form-grid">
+        <div class="field">
+          <%= label_tag "shipment_carrier_choice", "Transporteur" %>
+          <%= select_tag "shipment[carrier_choice]", options_for_select([[ "Sélectionner un transporteur", "" ]] + Admin::OrdersController::SHIPPING_CARRIER_OPTIONS.map { |carrier| [ carrier, carrier ] } + [[ "Autre", "other" ]]), id: "shipment_carrier_choice", required: true %>
+        </div>
+        <div class="field">
+          <%= label_tag "shipment_tracking_number", "Numéro de suivi" %>
+          <%= text_field_tag "shipment[tracking_number]", nil, id: "shipment_tracking_number", required: true, autocomplete: "off" %>
+        </div>
+        <div class="field">
+          <%= label_tag "shipment_shipping_carrier_other", "Transporteur personnalisé" %>
+          <%= text_field_tag "shipment[shipping_carrier_other]", nil, id: "shipment_shipping_carrier_other", autocomplete: "organization" %>
+          <p class="field-hint">À renseigner uniquement si vous choisissez « Autre ».</p>
+        </div>
+      </div>
+      <div class="admin-form-actions">
+        <%= submit_tag "Marquer comme expédiée", class: "button button-primary", data: { turbo_confirm: "Marquer cette commande comme expédiée ?" } %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Articles commandés</h2></div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th></th><th>Article</th><th>SKU</th><th>Quantité</th><th>Prix</th><th>Total</th></tr></thead>
+      <tbody>
+        <% @order.order_items.each do |item| %>
+          <% variant_image = item.product_variant&.gallery_images&.first %>
+          <tr>
+            <td>
+              <% if variant_image&.file&.attached? %>
+                <%= image_tag variant_image.file, class: "admin-thumb", alt: variant_image.alt_text %>
+              <% else %>
+                <div class="admin-thumb admin-thumb-placeholder">—</div>
+              <% end %>
+            </td>
+            <td><%= item.brand_name %> · <%= item.product_name %><br><small class="muted"><%= item.variant_label %></small></td>
+            <td><%= item.sku %></td>
+            <td><%= item.quantity %></td>
+            <td><%= money(item.unit_price_cents) %></td>
+            <td><%= money(item.line_total_cents) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Client</h2></div>
+  <div class="admin-form">
+    <div class="admin-form-grid">
+      <div><p class="field-hint">Contact</p><p><%= @order.email %><br><%= @order.phone %></p></div>
+      <div><p class="field-hint">Adresse de livraison</p><p><%= @order.address_line1 %><% if @order.address_line2.present? %><br><%= @order.address_line2 %><% end %><br><%= @order.postal_code %> <%= @order.city %><br><%= @order.shipping_country_name %></p></div>
+    </div>
+  </div>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Paiement</h2><p>Informations Stripe utiles au suivi — aucune clé ni secret n’est jamais affiché ici.</p></div>
+  <% if @order.payments.any? %>
+    <% @order.payments.each do |payment| %>
+      <div class="admin-form" style="margin-bottom:14px">
+        <div class="admin-form-grid">
+          <div><p class="field-hint">Statut</p><span class="status-pill <%= payment.status %>"><%= payment.status %></span></div>
+          <div><p class="field-hint">Montant</p><strong><%= money(payment.amount_cents, currency: payment.currency) %></strong></div>
+          <div><p class="field-hint">Fournisseur</p><p><%= payment.provider %></p></div>
+          <div><p class="field-hint">Créé le</p><p><%= l(payment.created_at, format: :short) %></p></div>
+          <div><p class="field-hint">Session de paiement</p><p><code><%= payment.checkout_session_id || "—" %></code></p></div>
+          <div><p class="field-hint">Intention de paiement</p><p><code><%= payment.payment_intent_id || "—" %></code></p></div>
+        </div>
+        <% if payment.payment_events.any? %>
+          <p class="field-hint" style="margin-top:14px">Événements webhook reçus</p>
+          <ul style="margin:6px 0 0;padding-left:18px">
+            <% payment.payment_events.order(:created_at).each do |event| %>
+              <li>
+                <%= l(event.created_at, format: :short) %> · <%= event.event_type %> · <span class="status-pill <%= event.status %>"><%= event.status %></span>
+                <% if event.error_message.present? %> · <span class="muted"><%= event.error_message %></span><% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="admin-table-empty">Aucun paiement enregistré pour cette commande.</p>
+  <% end %>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Historique</h2></div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Date</th><th>Évolution</th><th>Origine</th></tr></thead>
+      <tbody>
+        <% @order.order_status_events.order(:created_at).each do |event| %>
+          <tr>
+            <td><%= l(event.created_at, format: :short) %></td>
+            <td><%= event.from_status ? order_status_label(event.from_status) : "—" %> → <%= order_status_label(event.to_status) %></td>
+            <td><%= event.source %><% if event.admin_user %> (<%= event.admin_user.email %>)<% end %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

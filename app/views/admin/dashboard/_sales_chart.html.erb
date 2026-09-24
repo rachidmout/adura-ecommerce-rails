@@ -1,0 +1,26 @@
+<%
+  max_cents = daily_sales.map { |_date, cents| cents }.max.to_i
+  bar_count = daily_sales.size
+  chart_width = 700.0
+  chart_height = 170.0
+  bar_gap = bar_count > 20 ? 2 : 5
+  bar_width = (chart_width / bar_count) - bar_gap
+  label_every = bar_count > 10 ? 5 : 1
+%>
+<% if max_cents.zero? %>
+  <p class="sales-chart-empty">Aucune vente sur cette période.</p>
+<% else %>
+  <svg class="sales-chart-svg" viewBox="0 0 <%= chart_width.round %> <%= (chart_height + 20).round %>" preserveAspectRatio="none" role="img" aria-label="Chiffre d’affaires par jour">
+    <% daily_sales.each_with_index do |(date, cents), index| %>
+      <% bar_height = cents.zero? ? 1 : [ (cents.to_f / max_cents) * chart_height, 2 ].max %>
+      <% x = index * (bar_width + bar_gap) %>
+      <% y = chart_height - bar_height %>
+      <rect class="sales-chart-bar" x="<%= x.round(1) %>" y="<%= y.round(1) %>" width="<%= bar_width.round(1) %>" height="<%= bar_height.round(1) %>" rx="2">
+        <title><%= date.strftime("%d/%m/%Y") %> — <%= money(cents) %></title>
+      </rect>
+      <% if index % label_every == 0 || index == bar_count - 1 %>
+        <text class="sales-chart-axis" x="<%= (x + bar_width / 2).round(1) %>" y="<%= (chart_height + 14).round %>" text-anchor="middle"><%= date.strftime("%d/%m") %></text>
+      <% end %>
+    <% end %>
+  </svg>
+<% end %>

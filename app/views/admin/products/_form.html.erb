@@ -1,0 +1,97 @@
+<%= form_with model: [ :admin, product ], class: "admin-form" do |form| %>
+  <% if product.errors.any? %>
+    <div class="error-summary">
+      <h2>Le produit n’a pas été enregistré :</h2>
+      <ul><% product.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <div class="admin-section admin-form-section" style="margin-top:0">
+    <div class="admin-section-head"><h2>Informations générales</h2></div>
+    <div class="admin-form-grid">
+      <div class="field"><%= form.label :brand_id, "Marque" %><%= form.collection_select :brand_id, Brand.active.order(:name), :id, :name, prompt: "Choisir" %></div>
+      <div class="field"><%= form.label :name, "Nom" %><%= form.text_field :name, required: true %></div>
+      <div class="field"><%= form.label :slug, "Slug URL" %><%= form.text_field :slug, required: true %></div>
+      <div class="field"><%= form.label :verified_at, "Données vérifiées le" %><%= form.date_field :verified_at %></div>
+      <div class="field"><%= form.label :featured, "Mis en avant" %><%= form.check_box :featured %></div>
+    </div>
+  </div>
+
+  <div class="admin-section admin-form-section">
+    <div class="admin-section-head"><h2>Contenu et description</h2></div>
+    <div class="field"><%= form.label :short_description, "Description courte" %><%= form.text_field :short_description, maxlength: 255 %></div>
+    <div class="field"><%= form.label :description, "Description complète" %><%= form.text_area :description %></div>
+    <div class="field"><%= label_tag "product_source_urls_text", "Sources — une URL par ligne" %><%= text_area_tag "product[source_urls_text]", product.source_urls.join("\n") %></div>
+  </div>
+
+  <div class="admin-section admin-form-section">
+    <div class="admin-section-head">
+      <h2>Profil parfum</h2>
+      <p>Renseignez au minimum l’audience. Les autres critères peuvent rester vides lorsqu’ils ne sont pas vérifiés.</p>
+    </div>
+    <%= form.fields_for :perfume_profile do |profile_form| %>
+      <div class="admin-form-grid">
+        <div class="field">
+          <%= profile_form.label :audience, "Audience" %>
+          <%= profile_form.select :audience, [["Femme", "women"], ["Homme", "men"], ["Mixte", "unisex"]], { prompt: "Choisir" }, required: true %>
+        </div>
+        <div class="field">
+          <%= profile_form.label :concentration, "Concentration" %>
+          <%= profile_form.select :concentration, [["Eau de Parfum (EDP)", "eau_de_parfum"], ["Eau de Toilette (EDT)", "eau_de_toilette"], ["Extrait de Parfum", "extrait_de_parfum"]], { include_blank: "Non renseignée" } %>
+        </div>
+        <div class="field">
+          <%= profile_form.label :intensity_level, "Intensité" %>
+          <%= profile_form.select :intensity_level, [["Douce", "soft"], ["Modérée", "moderate"], ["Intense", "intense"]], { include_blank: "Non renseignée" } %>
+        </div>
+        <div class="field">
+          <%= profile_form.label :longevity_level, "Tenue estimée" %>
+          <%= profile_form.select :longevity_level, [["Courte", "short"], ["Modérée", "moderate"], ["Longue", "long"]], { include_blank: "Non renseignée" } %>
+        </div>
+        <div class="field">
+          <%= profile_form.label :sillage_level, "Sillage estimé" %>
+          <%= profile_form.select :sillage_level, [["Intime", "intimate"], ["Modéré", "moderate"], ["Fort", "strong"]], { include_blank: "Non renseigné" } %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="admin-section admin-form-section">
+    <div class="admin-section-head">
+      <h2>Classification olfactive</h2>
+      <p>Ces champs pilotent aussi les traductions affichées dans les 5 langues du site (indexées sur la famille/les notes, pas besoin de les ressaisir par langue).</p>
+    </div>
+    <div class="field">
+      <%= label_tag "product_primary_family_id", "Famille principale" %>
+      <%= select_tag "product[primary_family_id]", options_from_collection_for_select(OlfactoryFamily.active, :id, :name, product.primary_family&.id), include_blank: "Choisir" %>
+    </div>
+    <div class="admin-notes-grid">
+      <div class="field">
+        <%= label_tag "product_top_note_ids", "Notes de tête" %>
+        <%= select_tag "product[top_note_ids][]", options_from_collection_for_select(OlfactoryNote.active, :id, :name, product.product_olfactory_notes.select { |note| note.layer == "top" }.map(&:olfactory_note_id)), multiple: true %>
+      </div>
+      <div class="field">
+        <%= label_tag "product_heart_note_ids", "Notes de cœur" %>
+        <%= select_tag "product[heart_note_ids][]", options_from_collection_for_select(OlfactoryNote.active, :id, :name, product.product_olfactory_notes.select { |note| note.layer == "heart" }.map(&:olfactory_note_id)), multiple: true %>
+      </div>
+      <div class="field">
+        <%= label_tag "product_base_note_ids", "Notes de fond" %>
+        <%= select_tag "product[base_note_ids][]", options_from_collection_for_select(OlfactoryNote.active, :id, :name, product.product_olfactory_notes.select { |note| note.layer == "base" }.map(&:olfactory_note_id)), multiple: true %>
+      </div>
+    </div>
+    <p class="field-hint">Ctrl/Cmd + clic pour sélectionner plusieurs notes dans une même colonne.</p>
+  </div>
+
+  <div class="admin-section admin-form-section" id="seo">
+    <div class="admin-section-head">
+      <h2>SEO</h2>
+      <p>Laissez vide pour utiliser un texte généré automatiquement (visible en filigrane ci-dessous) — vous pouvez le remplacer à tout moment.</p>
+    </div>
+    <div class="field"><%= form.label :meta_title, "Titre SEO" %><%= form.text_field :meta_title, placeholder: translated_meta_title(product), maxlength: 70 %></div>
+    <div class="field"><%= form.label :meta_description, "Meta description" %><%= form.text_area :meta_description, placeholder: translated_meta_description(product), maxlength: 160 %></div>
+  </div>
+
+  <div class="admin-actions">
+    <%= form.submit "Enregistrer", class: "button button-primary" %>
+    <%= link_to "Annuler", admin_products_path, class: "button button-secondary" %>
+  </div>
+<% end %>

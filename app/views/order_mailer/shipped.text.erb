@@ -1,0 +1,26 @@
+Bonjour <%= @order.first_name %>,
+
+Votre commande <%= @order.public_token.first(8).upcase %> a été expédiée avec <%= @order.shipping_carrier %>.
+
+Numéro de suivi : <%= @order.tracking_number %>
+<% if @order.tracking_url %>
+Suivre mon colis : <%= @order.tracking_url %>
+<% end %>
+
+<% if (relay_point = @order.relay_point) %>
+Livraison en point relais :
+<%= relay_point.relay_name %>
+<%= relay_point.relay_address_line1 %>
+<% if relay_point.relay_address_line2.present? %><%= relay_point.relay_address_line2 %>
+<% end %><%= relay_point.relay_postal_code %> <%= relay_point.relay_city %>
+Code relais : <%= relay_point.relay_id %>
+<% else %>
+Adresse de livraison :
+<%= @order.address_line1 %>
+<% if @order.address_line2.present? %><%= @order.address_line2 %>
+<% end %><%= @order.postal_code %> <%= @order.city %>
+<%= @order.shipping_country_name %>
+<% end %>
+
+Merci de votre confiance,
+ADURA

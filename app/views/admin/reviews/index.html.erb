@@ -1,0 +1,52 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Avis clients</p><h1>Avis</h1></div>
+</div>
+
+<%= form_with url: admin_reviews_path, method: :get, data: { controller: "auto-submit" }, class: "admin-filters" do |form| %>
+  <div class="field">
+    <%= form.label :product_id, "Produit" %>
+    <%= form.collection_select :product_id, @products, :id, :name, { include_blank: "Tous" , selected: params[:product_id] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :rating, "Note" %>
+    <%= form.select :rating, (1..5).to_a.reverse.map { |n| [ "#{n} étoile#{"s" if n > 1}", n ] }, { include_blank: "Toutes", selected: params[:rating] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :status, "Statut" %>
+    <%= form.select :status, Review.statuses.keys, { include_blank: "Tous", selected: params[:status] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <% if params.values_at(:product_id, :rating, :status).any?(&:present?) %>
+    <%= link_to admin_reviews_path, class: "admin-filter-reset" do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      Effacer
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead><tr><th>Produit</th><th>Auteur</th><th>Note</th><th>Commentaire</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      <% @reviews.each do |review| %>
+        <tr>
+          <td><%= link_to review.product.name, edit_admin_product_path(review.product), class: "text-link" %></td>
+          <td><%= review.author_name %><% if review.verified_purchase? %><br><span class="status-pill published">achat vérifié</span><% end %></td>
+          <td><%= review.rating %> / 5</td>
+          <td><%= truncate(review.comment, length: 90) %></td>
+          <td><span class="status-pill <%= review.status == "approved" ? "published" : review.status == "hidden" ? "archived" : "pending" %>"><%= review.status %></span></td>
+          <td><%= l(review.created_at, format: :short) %></td>
+          <td>
+            <div class="admin-row-actions">
+              <% unless review.approved? %><%= button_to "Approuver", approve_admin_review_path(review), method: :patch, class: "text-link" %><% end %>
+              <% unless review.hidden? %><%= button_to "Masquer", hide_admin_review_path(review), method: :patch, class: "text-link" %><% end %>
+              <%= button_to "Supprimer", admin_review_path(review), method: :delete, class: "text-link danger-link", data: { turbo_confirm: "Supprimer définitivement cet avis ?" } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @reviews.none? %>
+        <tr><td colspan="7" class="admin-table-empty"><%= params.values_at(:product_id, :rating, :status).any?(&:present?) ? "Aucun avis pour ces filtres." : "Aucun avis client pour le moment." %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

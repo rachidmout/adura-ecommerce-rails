@@ -1,0 +1,9 @@
+<% shipping_pending = @shipping_pending || @shipping_unavailable %>
+<dl>
+  <div><dt><%= t("order_summary.subtotal") %></dt><dd><%= money(@subtotal_cents) %></dd></div>
+  <% if @discount_cents.positive? %>
+    <div class="order-discount"><dt><%= t("order_summary.discount") %><% if @promo_code_applied %> (<%= @promo_code_applied.code %>)<% end %></dt><dd>−<%= money(@discount_cents) %></dd></div>
+  <% end %>
+  <div><dt><%= t("order_summary.shipping") %></dt><dd<% if Checkout::ShippingMethodsFeature.enabled? && !@shipping_pending %> data-shipping-methods-target="shippingAmount"<% end %>><%= shipping_pending ? t("order_summary.shipping_calculated_at_checkout") : (@shipping_cents.zero? ? t("order_summary.free_shipping") : money(@shipping_cents)) %></dd></div>
+  <div class="order-total"><dt><%= shipping_pending ? t("order_summary.total_excluding_shipping") : t("order_summary.total") %></dt><dd<% if Checkout::ShippingMethodsFeature.enabled? && !@shipping_pending %> data-shipping-methods-target="totalAmount"<% end %>><%= money(@total_cents) %></dd></div>
+</dl>

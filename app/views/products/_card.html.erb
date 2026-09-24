@@ -1,0 +1,16 @@
+<article class="product-card">
+  <%= link_to product_path(product), class: "product-card-link", aria: { label: "#{product.name} · #{product.brand.name}" } do %>
+    <div class="product-card-image">
+      <div class="product-visual has-image"><%= product_image(product, widths: [ 320, 480, 720 ], sizes: "(max-width: 640px) 46vw, (max-width: 980px) 44vw, 360px") %></div>
+      <% if product.featured? %><span class="product-badge"><%= t("products.index.badge_selection") %></span><% end %>
+      <% unless product.available? %><span class="stock-badge"><%= t("products.index.badge_sold_out") %></span><% end %>
+    </div>
+    <div class="product-card-body">
+      <p class="eyebrow"><%= product.brand.name %></p>
+      <h3><%= product.name %></h3>
+      <p class="product-family"><%= translated_family_name(product.primary_family) || t("products.index.family") %></p>
+      <% if product.product_variants.size > 1 %><ul class="product-card-formats"><% product.product_variants.each do |variant| %><li><%= variant.label %></li><% end %></ul><% end %>
+      <div class="product-card-meta"><% if product.product_variants.size > 1 %><span class="product-card-from"><%= t("products.index.from_price") %></span><% end %><strong><%= product.minimum_price_cents ? money(product.minimum_price_cents) : t("products.index.price_to_confirm") %></strong><% if product.product_variants.size == 1 %><span><%= product.product_variants.first&.label %></span><% end %></div>
+    </div>
+  <% end %>
+</article>

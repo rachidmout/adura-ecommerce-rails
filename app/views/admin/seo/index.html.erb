@@ -1,0 +1,34 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Vue d’ensemble</p><h1>SEO</h1></div>
+</div>
+
+<div class="admin-grid">
+  <article class="admin-card"><span>Produits</span><strong><%= @products.size %></strong></article>
+  <article class="admin-card"><span>SEO à compléter</span><strong><%= @incomplete_count %></strong></article>
+  <article class="admin-card"><span>Familles olfactives</span><strong><%= link_to "Gérer", admin_olfactory_families_path, class: "text-link" %></strong></article>
+</div>
+
+<div class="admin-section">
+  <div class="admin-section-head"><h2>Produits</h2><p>Titre/description manquants, image sans variante associée, ou produit non publié (donc non indexable).</p></div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Produit</th><th>Statut</th><th>Titre SEO</th><th>Meta description</th><th>Indexable</th><th>SEO</th><th></th></tr></thead>
+      <tbody>
+        <% @products.each do |product| %>
+          <tr>
+            <td><strong><%= product.name %></strong><br><small class="muted"><%= product.slug %></small></td>
+            <td><span class="status-pill <%= product.status %>"><%= product.status %></span></td>
+            <td><%= product.meta_title.presence || "—" %></td>
+            <td><%= product.meta_description.presence || "—" %></td>
+            <td><span class="status-pill <%= product.published? ? "published" : "archived" %>"><%= product.published? ? "oui" : "non" %></span></td>
+            <td><span class="status-pill <%= product.seo_complete? ? "published" : "pending" %>"><%= product.seo_complete? ? "SEO complet" : "SEO à compléter" %></span></td>
+            <td><%= link_to "Modifier", edit_admin_product_path(product), class: "text-link", anchor: "seo" %></td>
+          </tr>
+        <% end %>
+        <% if @products.none? %>
+          <tr><td colspan="7" class="admin-table-empty"><p>Aucun produit à contrôler pour le moment.</p><%= link_to "Créer un produit", new_admin_product_path, class: "button button-small button-primary" %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

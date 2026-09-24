@@ -1,0 +1,51 @@
+<% images = product.product_images.order(:position, :id) %>
+<% if images.any? %>
+  <div class="admin-gallery">
+    <% images.each do |image| %>
+      <article class="admin-gallery-item <%= "is-primary" if image.primary? %>">
+        <div class="admin-gallery-thumb">
+          <% if image.file.attached? %>
+            <%= image_tag image.file, alt: image.alt_text %>
+          <% else %>
+            <div class="admin-thumb-placeholder">Pas de fichier</div>
+          <% end %>
+        </div>
+        <% if image.primary? %><span class="admin-gallery-badge">Principale</span><% end %>
+        <p class="admin-gallery-variant"><%= image.product_variant&.label || "Photo générique" %></p>
+        <%= form_with url: admin_product_image_path(product, image), method: :patch, scope: :image, class: "admin-gallery-alt-form" do |form| %>
+          <%= form.label :alt_text, "Texte alternatif", for: "image_alt_text_#{image.id}", class: "sr-only" %>
+          <%= form.text_field :alt_text, value: image.alt_text, id: "image_alt_text_#{image.id}", placeholder: "Texte alternatif (SEO)" %>
+          <%= form.submit "Enregistrer", class: "button-small button-secondary" %>
+        <% end %>
+        <div class="admin-gallery-controls">
+          <%= button_to move_up_admin_product_image_path(product, image), method: :patch, class: "admin-gallery-move", aria: { label: "Monter d’un cran" } do %>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+          <% end %>
+          <%= button_to move_down_admin_product_image_path(product, image), method: :patch, class: "admin-gallery-move", aria: { label: "Descendre d’un cran" } do %>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+          <% end %>
+          <% unless image.primary? %>
+            <%= button_to "Principale", set_primary_admin_product_image_path(product, image), method: :patch, class: "admin-gallery-set-primary" %>
+          <% end %>
+          <%= button_to "Supprimer", admin_product_image_path(product, image), method: :delete, class: "admin-gallery-delete", data: { turbo_confirm: "Supprimer définitivement cette image ? Cette action ne peut pas être annulée." } %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+<% else %>
+  <p class="admin-gallery-empty">Aucune image pour le moment — ajoutez-en une ci-dessous.</p>
+<% end %>
+
+<%= form_with url: admin_product_images_path(product), method: :post, multipart: true, class: "admin-upload-form", data: { controller: "image-preview" } do %>
+  <div class="field">
+    <%= label_tag "images_upload", "Ajouter des photos" %>
+    <%= file_field_tag "images[]", multiple: true, accept: "image/jpeg,image/png,image/webp", required: true, data: { image_preview_target: "input", action: "change->image-preview#preview" } %>
+    <small class="field-hint">Prévisualisez les fichiers avant de les envoyer.</small>
+  </div>
+  <div class="field">
+    <%= label_tag "product_variant_id", "Variante associée" %>
+    <%= select_tag "product_variant_id", options_from_collection_for_select(product.product_variants, :id, :label), include_blank: "Générique (toutes variantes)" %>
+  </div>
+  <div class="admin-image-preview" data-image-preview-target="preview" hidden aria-live="polite"></div>
+  <%= submit_tag "Ajouter", class: "button button-primary" %>
+<% end %>

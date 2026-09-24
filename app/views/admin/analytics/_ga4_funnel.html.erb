@@ -1,0 +1,11 @@
+<div class="admin-funnel" aria-label="Funnel e-commerce GA4">
+  <% funnel[:steps].each_with_index do |step, index| %>
+    <% if index.positive? %>
+      <div class="admin-funnel-transition<%= " is-biggest-drop" if funnel[:biggest_drop]&.fetch(:key) == step[:key] %>
+        <span aria-hidden="true">↓</span><strong><%= step[:previous_rate] ? number_to_percentage(step[:previous_rate], precision: 1, strip_insignificant_zeros: true) : "—" %> passent</strong><% if step[:loss_rate] %><small><%= number_to_percentage(step[:loss_rate], precision: 1, strip_insignificant_zeros: true) %> de perte</small><% end %>
+      </div>
+    <% end %>
+    <article class="admin-funnel-step<%= " is-biggest-drop" if funnel[:biggest_drop]&.fetch(:key) == step[:key] %>"><span><%= step[:label] %></span><strong><%= step[:count] %></strong><small><%= step[:overall_rate] ? number_to_percentage(step[:overall_rate], precision: 1, strip_insignificant_zeros: true) : "Base du funnel" %></small></article>
+  <% end %>
+</div>
+<% if funnel[:biggest_drop] %><p class="admin-data-note">Plus forte fuite : <strong><%= funnel[:biggest_drop][:previous_label] %> → <%= funnel[:biggest_drop][:label] %></strong> (<%= number_to_percentage(funnel[:biggest_drop][:loss_rate], precision: 1, strip_insignificant_zeros: true) %>).</p><% end %>

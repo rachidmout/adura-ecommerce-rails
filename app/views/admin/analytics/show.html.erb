@@ -1,0 +1,81 @@
+<div class="admin-title">
+  <div>
+    <p class="eyebrow">Performance business</p>
+    <h1>Analytics</h1>
+  </div>
+  <div class="sales-chart-period" aria-label="Période analysée">
+    <%= link_to "Aujourd’hui", admin_analytics_path(period: "today"), class: ("is-active" if @report.period == "today") %>
+    <%= link_to "7 derniers jours", admin_analytics_path(period: "7d"), class: ("is-active" if @report.period == "7d") %>
+    <%= link_to "30 derniers jours", admin_analytics_path(period: "30d"), class: ("is-active" if @report.period == "30d") %>
+  </div>
+</div>
+
+<p class="admin-page-lead">Du <%= l(@report.starts_on, format: :short) %> au <%= l(@report.ends_on, format: :short) %>. Les données commerciales sont issues d’ADURA ; GA4 mesure le comportement des visiteurs ayant accepté Analytics.</p>
+
+<section class="admin-panel admin-metric-section">
+  <div class="admin-panel-head"><div><p class="eyebrow">Données commerciales · ADURA</p><h2>Business officiel</h2></div></div>
+  <div class="admin-grid admin-dashboard-kpis">
+    <article class="admin-card"><span>CA officiel · DB ADURA</span><strong><%= money(@report.revenue_cents) %></strong><%= render "comparison", comparison: @report.comparisons[:revenue_cents] %></article>
+    <article class="admin-card"><span>Commandes payées</span><strong><%= @report.orders_count %></strong><%= render "comparison", comparison: @report.comparisons[:orders_count] %></article>
+    <article class="admin-card"><span>Panier moyen</span><strong><%= money(@report.average_order_cents) %></strong><%= render "comparison", comparison: @report.comparisons[:average_order_cents] %></article>
+    <article class="admin-card"><span>Clients distincts</span><strong><%= @report.customers_count %></strong></article>
+    <article class="admin-card"><span>Articles vendus</span><strong><%= @report.items_sold_count %></strong><%= render "comparison", comparison: @report.comparisons[:items_sold_count] %></article>
+    <article class="admin-card"><span>Commandes à traiter</span><strong><%= @report.awaiting_shipment_count %></strong><small>dont <%= @report.preparing_orders_count %> en préparation</small></article>
+    <article class="admin-card"><span>Commandes expédiées</span><strong><%= @report.shipped_orders_count %></strong></article>
+    <article class="admin-card"><span>Réductions accordées</span><strong><%= money(@report.discount_cents) %></strong><small><%= @report.promo_orders_count %> commande(s) avec code promo</small></article>
+    <article class="admin-card"><span>Livraison facturée</span><strong><%= money(@report.shipping_cents) %></strong><small><%= @report.free_shipping_orders_count %> livraison(s) offerte(s)</small></article>
+  </div>
+</section>
+
+<section class="admin-panel admin-metric-section" data-ga4-analytics>
+  <div class="admin-panel-head"><div><p class="eyebrow">Données comportementales · GA4</p><h2>Trafic et conversion</h2></div></div>
+  <% if @ga4_report.available? %>
+    <div class="admin-grid admin-dashboard-kpis">
+      <article class="admin-card"><span>Utilisateurs actifs</span><strong><%= @ga4_report.kpis[:active_users] %></strong><%= render "comparison", comparison: @ga4_report.comparisons[:active_users] %></article>
+      <article class="admin-card"><span>Sessions</span><strong><%= @ga4_report.kpis[:sessions] %></strong><%= render "comparison", comparison: @ga4_report.comparisons[:sessions] %></article>
+      <article class="admin-card"><span>Pages vues</span><strong><%= @ga4_report.kpis[:page_views] %></strong><%= render "comparison", comparison: @ga4_report.comparisons[:page_views] %></article>
+      <article class="admin-card"><span>Achats GA4</span><strong><%= @ga4_report.kpis[:purchases] %></strong><%= render "comparison", comparison: @ga4_report.comparisons[:purchases] %></article>
+      <article class="admin-card"><span>Conversion GA4</span><strong><%= number_to_percentage(@ga4_report.kpis[:conversion_rate], precision: 2, strip_insignificant_zeros: true) %></strong><%= render "comparison", comparison: @ga4_report.comparisons[:conversion_rate] %></article>
+    </div>
+    <p class="admin-data-note">Les achats et revenus GA4 dépendent du consentement Analytics ; ils ne remplacent jamais le CA officiel ADURA.</p>
+  <% else %>
+    <p class="admin-table-empty"><%= @ga4_report.message %></p>
+  <% end %>
+</section>
+
+<section class="admin-panel" data-ga4-advanced-analytics>
+  <div class="admin-panel-head"><div><p class="eyebrow">Parcours e-commerce</p><h2>Funnel GA4</h2></div></div>
+  <% if @ga4_report.advanced.available? %><%= render "ga4_funnel", funnel: @ga4_report.advanced.funnel %><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %>
+</section>
+
+<section class="admin-panel" data-analytics-insights>
+  <div class="admin-panel-head"><div><p class="eyebrow">Lecture rapide</p><h2>À surveiller</h2></div></div>
+  <% if @insights.any? %><ul class="analytics-insights"><% @insights.each do |insight| %><li class="analytics-insights__item analytics-insights__item--<%= insight.kind %>"><%= insight.message %></li><% end %></ul><% else %><p class="admin-table-empty">Aucun signal suffisant sur cette période.</p><% end %>
+</section>
+
+<section class="admin-panel">
+  <div class="admin-panel-head"><div><p class="eyebrow">Catalogue · GA4</p><h2>Produits : intérêt et conversion</h2></div></div>
+  <% if @ga4_report.advanced.available? %><%= render "ga4_products", rows: @ga4_report.advanced.products %><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %>
+</section>
+
+<div class="admin-form-grid admin-analytics-pair">
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Acquisition · GA4</p><h2>Sources de trafic</h2></div></div><% if @ga4_report.advanced.available? %><%= render "ga4_sources", rows: @ga4_report.advanced.traffic_sources %><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %></section>
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Acquisition · GA4</p><h2>Landing pages</h2></div></div><% if @ga4_report.advanced.available? %><%= render "ga4_landing_pages", rows: @ga4_report.advanced.landing_pages %><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %></section>
+</div>
+
+<div class="admin-form-grid admin-analytics-pair">
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Questionnaire</p><h2>Utilisation du quiz</h2></div></div><% if @ga4_report.advanced.available? %><div class="admin-grid admin-dashboard-kpis"><article class="admin-card"><span>Démarrés</span><strong><%= @ga4_report.advanced.quiz_usage[:started] %></strong></article><article class="admin-card"><span>Famille choisie</span><strong><%= @ga4_report.advanced.quiz_usage[:family_selected] %></strong></article><article class="admin-card"><span>Budget choisi</span><strong><%= @ga4_report.advanced.quiz_usage[:budget_selected] %></strong></article><article class="admin-card"><span>Terminés</span><strong><%= @ga4_report.advanced.quiz_usage[:completed] %></strong><small><%= number_to_percentage(@ga4_report.advanced.quiz_usage[:completion_rate], precision: 2, strip_insignificant_zeros: true) %> de complétion</small></article></div><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %></section>
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Catalogue</p><h2>Recherche et filtres</h2></div></div><% if @ga4_report.advanced.available? %><div class="admin-grid admin-dashboard-kpis"><article class="admin-card"><span>Événements search</span><strong><%= @ga4_report.advanced.search_usage %></strong><small>Le texte recherché n’est jamais collecté ni affiché.</small></article></div><% else %><p class="admin-table-empty"><%= @ga4_report.advanced.message %></p><% end %></section>
+</div>
+
+<section class="admin-panel"><div class="admin-panel-head"><div><p class="eyebrow">Ventes · ADURA</p><h2>Chiffre d’affaires par jour</h2></div></div><%= render "admin/dashboard/sales_chart", daily_sales: @report.daily_sales %></section>
+
+<div class="admin-form-grid admin-analytics-pair">
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Catalogue · ADURA</p><h2>Top produits vendus</h2></div></div><% if @report.top_products.any? %><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Produit</th><th>Quantité</th><th>CA produits</th></tr></thead><tbody><% @report.top_products.each do |product| %><tr><td><%= product[:brand_name] %> · <%= product[:product_name] %></td><td><strong><%= product[:quantity] %></strong></td><td><%= money(product[:revenue_cents]) %></td></tr><% end %></tbody></table></div><% else %><p class="admin-table-empty">Aucune vente sur cette période.</p><% end %></section>
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Promotions · ADURA</p><h2>Codes utilisés</h2></div></div><% if @report.top_promos.any? %><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Code</th><th>Commandes</th><th>Réductions</th></tr></thead><tbody><% @report.top_promos.each do |promo| %><tr><td><%= promo[:code] %></td><td><strong><%= promo[:uses_count] %></strong></td><td><%= money(promo[:discount_cents]) %></td></tr><% end %></tbody></table></div><% else %><p class="admin-table-empty">Aucun code promo utilisé sur cette période.</p><% end %></section>
+</div>
+
+<div class="admin-form-grid admin-analytics-pair">
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Livraison · ADURA</p><h2>Destinations</h2></div></div><% if @report.country_breakdown.any? %><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Destination</th><th>Commandes</th></tr></thead><tbody><% @report.country_breakdown.each do |country, count| %><tr><td><%= country %></td><td><strong><%= count %></strong></td></tr><% end %></tbody></table></div><% else %><p class="admin-table-empty">Aucune commande sur cette période.</p><% end %></section>
+  <section class="admin-panel" style="margin-top:0"><div class="admin-panel-head"><div><p class="eyebrow">Livraison · ADURA</p><h2>Méthodes de livraison</h2></div></div><% if @report.shipping_method_breakdown.any? %><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Méthode</th><th>Commandes</th></tr></thead><tbody><% @report.shipping_method_breakdown.each do |method, count| %><tr><td><%= method %></td><td><strong><%= count %></strong></td></tr><% end %></tbody></table></div><% else %><p class="admin-table-empty">Aucune méthode de livraison sur cette période.</p><% end %></section>
+</div>

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -e
+
+if [ "${1}" = "bin/rails" ] && [ "${2}" = "server" ]; then
+  bin/rails db:prepare
+  rm -f tmp/pids/server.pid
+fi
+
+exec "$@"

@@ -1,0 +1,33 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Marketing</p><h1>Codes promo</h1></div>
+  <%= link_to "Nouveau code", new_admin_promo_code_path, class: "button button-primary" %>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead><tr><th>Code</th><th>Remise</th><th>Validité</th><th>Utilisations</th><th>CA généré</th><th>Remise accordée</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+      <% @promo_codes.each do |promo_code| %>
+        <tr>
+          <td><strong><%= promo_code.code %></strong></td>
+          <td><%= promo_code.percentage? ? "#{promo_code.discount_value}%" : money(promo_code.discount_value) %></td>
+          <td>
+            <% if promo_code.starts_at || promo_code.ends_at %>
+              <%= promo_code.starts_at&.to_date&.strftime("%d/%m/%Y") || "—" %> → <%= promo_code.ends_at&.to_date&.strftime("%d/%m/%Y") || "—" %>
+            <% else %>
+              <span class="muted">Sans limite</span>
+            <% end %>
+          </td>
+          <td><%= promo_code.uses_count %><% if promo_code.max_uses %> / <%= promo_code.max_uses %><% end %></td>
+          <td><%= money(promo_code.revenue_generated_cents) %></td>
+          <td><%= money(promo_code.discount_given_cents) %></td>
+          <td><span class="status-pill <%= promo_code.active? ? "published" : "archived" %>"><%= promo_code.active? ? "actif" : "inactif" %></span></td>
+          <td><%= link_to "Modifier", edit_admin_promo_code_path(promo_code), class: "text-link" %></td>
+        </tr>
+      <% end %>
+      <% if @promo_codes.none? %>
+        <tr><td colspan="8" class="admin-table-empty"><p>Aucun code promo pour le moment.</p><%= link_to "Créer un code promo", new_admin_promo_code_path, class: "button button-small button-primary" %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<% @entries.each do |entry| %>
+  <url>
+    <loc><%= "#{request.base_url}#{entry[:path]}" %></loc>
+    <% if entry[:updated_at] %><lastmod><%= entry[:updated_at].strftime("%Y-%m-%d") %></lastmod><% end %>
+    <% I18n.available_locales.each do |locale| %>
+    <xhtml:link rel="alternate" hreflang="<%= locale %>" href="<%= "#{request.base_url}#{locale == I18n.default_locale ? entry[:path] : "/#{locale}#{entry[:path]}"}" %>" />
+    <% end %>
+    <xhtml:link rel="alternate" hreflang="x-default" href="<%= "#{request.base_url}#{entry[:path]}" %>" />
+  </url>
+<% end %>
+</urlset>

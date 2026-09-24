@@ -1,0 +1,11 @@
+<section class="form-section checkout-shipping-methods">
+  <h2><%= t("checkouts.new.shipping_method_heading") %></h2>
+  <p class="checkout-shipping-status" aria-live="polite" data-shipping-methods-target="status"><%= local_assigns[:shipping_error] %></p>
+  <div data-shipping-methods-target="options">
+    <% Array(local_assigns[:shipping_quote]&.methods).each do |shipping_method| %>
+      <label class="shipping-method-card"><%= radio_button_tag :shipping_method_id, shipping_method.shipping_method_id, local_assigns[:selected_shipping_method]&.shipping_method_id == shipping_method.shipping_method_id, data: { action: "change->shipping-methods#select ecommerce-analytics#selectShippingMethod", shipping_methods_price_cents: shipping_method.price_cents, shipping_methods_kind: shipping_method.kind, ecommerce_analytics_shipping_method: { shipping_tier: [ shipping_method.name, shipping_method.carrier_name ].compact.join(" — "), price: shipping_method.price_cents / 100.0 }.to_json } %><span><strong><%= shipping_method.name %></strong><small><%= shipping_method.carrier_name %></small></span><b><%= shipping_method.free_shipping ? t("order_summary.free_shipping") : money(shipping_method.price_cents) %></b></label>
+    <% end %>
+  </div>
+  <%= button_tag t("checkouts.new.refresh_shipping_options"), type: "button", class: "button button-secondary checkout-shipping-refresh", data: { action: "shipping-methods#refresh" } %>
+</section>
+<%= render "pickup_points" %>

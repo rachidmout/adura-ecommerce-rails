@@ -1,0 +1,13 @@
+<div class="admin-title"><div><p class="eyebrow">SEO</p><h1>Modifier <%= @olfactory_family.name %></h1></div></div>
+<%= form_with model: [ :admin, @olfactory_family ], class: "admin-form" do |form| %>
+  <% if @olfactory_family.errors.any? %>
+    <div class="error-summary"><ul><% @olfactory_family.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div>
+  <% end %>
+  <div class="field"><%= form.label :description, "Texte éditorial (affiché sur la page de la famille)" %><%= form.text_area :description %></div>
+  <div class="field"><%= form.label :meta_title, "Titre SEO" %><%= form.text_field :meta_title, placeholder: "#{@olfactory_family.name} · ADURA" %></div>
+  <div class="field"><%= form.label :meta_description, "Meta description" %><%= form.text_area :meta_description, placeholder: @olfactory_family.description %></div>
+  <div class="admin-actions">
+    <%= form.submit "Enregistrer", class: "button button-primary" %>
+    <%= link_to "Annuler", admin_olfactory_families_path, class: "button button-secondary" %>
+  </div>
+<% end %>

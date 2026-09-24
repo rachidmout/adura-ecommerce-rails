@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 210" role="img" aria-labelledby="title">
+  <title id="title">Illustration de coton et de musc blanc</title>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6f1e7"/><stop offset="1" stop-color="#cfd4ca"/></linearGradient></defs>
+  <rect width="320" height="210" rx="28" fill="url(#bg)"/>
+  <path d="M159 175c-2-53-14-84-37-112M159 144c21-19 36-39 44-62" fill="none" stroke="#65705d" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#fffdfa" stroke="#d8d1c4" stroke-width="2"><circle cx="109" cy="62" r="30"/><circle cx="145" cy="54" r="33"/><circle cx="177" cy="72" r="31"/><circle cx="137" cy="87" r="34"/></g>
+  <path d="M159 146c-21-18-39-19-55-5 17 18 35 20 55 5ZM169 126c18-21 36-26 55-14-13 21-31 26-55 14Z" fill="#839078"/>
+  <path d="m251 52 4 10 10 4-10 4-4 10-4-10-10-4 10-4Z" fill="#b28a4b"/>
+</svg>

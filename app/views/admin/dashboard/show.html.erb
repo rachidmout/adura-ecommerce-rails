@@ -1,0 +1,136 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Vue d’ensemble</p><h1>Tableau de bord</h1></div>
+</div>
+
+<div class="admin-grid admin-dashboard-kpis">
+  <article class="admin-card"><span>Chiffre d’affaires total</span><strong><%= money(@total_revenue_cents) %></strong></article>
+  <article class="admin-card"><span>Chiffre d’affaires du mois</span><strong><%= money(@month_revenue_cents) %></strong></article>
+  <article class="admin-card"><span>Commandes payées</span><strong><%= @order_count %></strong></article>
+  <article class="admin-card"><span>Commandes du mois</span><strong><%= @month_order_count %></strong></article>
+  <article class="admin-card"><span>Panier moyen</span><strong><%= money(@average_order_cents) %></strong></article>
+  <article class="admin-card"><span>Produits publiés</span><strong><%= @published_count %></strong></article>
+  <article class="admin-card"><span>Stock faible ou rupture</span><strong><%= @low_stock_count %></strong></article>
+  <article class="admin-card"><span>Commandes à traiter</span><strong><%= @pending_orders_count %></strong></article>
+  <article class="admin-card"><span>Commandes expédiées</span><strong><%= @shipped_orders_count %></strong></article>
+</div>
+
+<section class="admin-panel">
+  <div class="admin-panel-head">
+    <div><p class="eyebrow">Ventes</p><h2>Chiffre d’affaires par jour</h2></div>
+    <div class="sales-chart-period">
+      <%= link_to "7 jours", admin_root_path(period: 7), class: ("is-active" if @period == 7) %>
+      <%= link_to "30 jours", admin_root_path(period: 30), class: ("is-active" if @period == 30) %>
+    </div>
+  </div>
+  <%= render "sales_chart", daily_sales: @daily_sales %>
+</section>
+
+<div class="admin-form-grid" style="margin-top:26px">
+  <section class="admin-panel" style="margin-top:0">
+    <div class="admin-panel-head"><div><p class="eyebrow">Activité</p><h2>Dernières commandes</h2></div><%= link_to "Voir tout", admin_orders_path, class: "text-link" %></div>
+    <% if @recent_orders.any? %>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Référence</th><th>Client</th><th>Date</th><th>Statut</th><th>Total</th></tr></thead>
+          <tbody>
+            <% @recent_orders.each do |order| %>
+              <tr>
+                <td><%= link_to order.public_token.first(8).upcase, admin_order_path(order), class: "text-link" %></td>
+                <td><%= order.customer_name %></td>
+                <td><%= l(order.created_at, format: :short) %></td>
+                <td><span class="status-pill <%= order.status %>"><%= order_status_label(order.status) %></span></td>
+                <td><%= money(order.total_cents) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="admin-table-empty">Aucune commande pour le moment.</p>
+    <% end %>
+  </section>
+
+  <section class="admin-panel" style="margin-top:0">
+    <div class="admin-panel-head"><div><p class="eyebrow">Catalogue</p><h2>Produits les plus vendus</h2></div></div>
+    <% if @top_products.any? %>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Produit</th><th>Quantité vendue</th></tr></thead>
+          <tbody>
+            <% @top_products.each do |(brand_name, product_name), quantity| %>
+              <tr><td><%= brand_name %> · <%= product_name %></td><td><strong><%= quantity %></strong></td></tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="admin-table-empty">Aucune vente pour le moment.</p>
+    <% end %>
+  </section>
+</div>
+
+<section class="admin-panel">
+  <div class="admin-panel-head"><div><p class="eyebrow">Stocks</p><h2>Stocks à surveiller</h2></div><%= link_to "Gérer les produits", admin_products_path, class: "text-link" %></div>
+  <% if @low_stock_variants.any? %>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Produit</th><th>SKU</th><th>Format</th><th>Physique</th><th>Réservé</th><th>Disponible</th></tr></thead>
+        <tbody>
+          <% @low_stock_variants.each do |variant| %>
+            <tr>
+              <td><%= link_to variant.product.name, edit_admin_product_path(variant.product) %></td>
+              <td><%= variant.sku %></td>
+              <td><span class="format-badge"><%= variant.label %></span></td>
+              <td><%= variant.stock_quantity %></td>
+              <td><%= variant.reserved_stock_quantity %></td>
+              <td><strong><%= variant.available_stock_quantity %></strong></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="admin-table-empty">Aucune référence en stock faible.</p>
+  <% end %>
+</section>
+
+<div class="admin-form-grid" style="margin-top:26px">
+  <section class="admin-panel" style="margin-top:0">
+    <div class="admin-panel-head"><div><p class="eyebrow">Marketing</p><h2>Codes promo</h2></div><%= link_to "Gérer", admin_promo_codes_path, class: "text-link" %></div>
+    <div class="admin-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px">
+      <article class="admin-card"><span>Codes actifs</span><strong><%= @active_promo_codes_count %></strong></article>
+      <article class="admin-card"><span>Réductions accordées ce mois</span><strong><%= money(@month_discount_given_cents) %></strong></article>
+    </div>
+    <% if @top_promo_codes.any? %>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Code</th><th>Utilisations</th><th>CA généré</th></tr></thead>
+          <tbody>
+            <% @top_promo_codes.each do |promo_code| %>
+              <tr><td><%= promo_code.code %></td><td><%= promo_code.uses_count %></td><td><%= money(promo_code.revenue_generated_cents) %></td></tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="admin-table-empty">Aucun code promo créé pour le moment.</p>
+    <% end %>
+  </section>
+
+  <section class="admin-panel" style="margin-top:0">
+    <div class="admin-panel-head"><div><p class="eyebrow">Avis clients</p><h2>Avis</h2></div><%= link_to "Gérer", admin_reviews_path, class: "text-link" %></div>
+    <div class="admin-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px">
+      <article class="admin-card"><span>Note moyenne</span><strong><%= @average_review_rating ? number_with_precision(@average_review_rating, precision: 1) : "—" %></strong></article>
+      <article class="admin-card"><span>En attente de modération</span><strong><%= @pending_reviews_count %></strong></article>
+    </div>
+    <% if @recent_reviews.any? %>
+      <ul class="admin-recent-reviews">
+        <% @recent_reviews.each do |review| %>
+          <li><strong><%= review.rating %>/5</strong> — <%= review.product.name %><br><span class="muted"><%= truncate(review.comment, length: 70) %></span></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="admin-table-empty">Aucun avis pour le moment.</p>
+    <% end %>
+  </section>
+</div>

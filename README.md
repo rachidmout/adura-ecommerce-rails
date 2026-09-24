@@ -67,11 +67,11 @@ bundle exec brakeman
 
 Copy `.env.example` to `.env`. Stripe and other third-party integrations are optional for local exploration; keep real credentials out of Git.
 
-The initial local administrator credentials are configured through `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env.example`. Change them before sharing any local environment.
+If you seed the application locally, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` yourself in `.env`; no administrator credentials are included in this public repository.
 
 ## Public repository scope
 
-Product media and production credentials are intentionally excluded from this public snapshot. The repository is designed for reviewing the application architecture, domain modelling and delivery practices; the deployed product can be viewed at [adura.store](https://adura.store).
+Product media, production credentials, commercial seed data and legal/operational content are intentionally excluded from this public snapshot. The repository is designed for reviewing the application architecture, domain modelling and delivery practices; the deployed product can be viewed at [adura.store](https://adura.store).
 
 ## Why this project matters to me
 

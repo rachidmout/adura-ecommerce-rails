@@ -1,0 +1,22 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+
+development:
+  <<: *default
+  database: adura_development
+<% if ENV["DATABASE_URL"].to_s != "" %>
+  url: <%= ENV["DATABASE_URL"] %>
+<% end %>
+
+test:
+  <<: *default
+  database: adura_test
+<% if ENV["TEST_DATABASE_URL"].to_s != "" %>
+  url: <%= ENV["TEST_DATABASE_URL"] %>
+<% end %>
+
+production:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL") %>

@@ -1,0 +1,29 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Suivi</p><h1>Commandes</h1></div>
+  <%= form_with url: admin_orders_path, method: :get, data: { controller: "auto-submit" } do |form| %>
+    <%= form.select :status, Order.statuses.keys.map { |status| [ order_status_label(status), status ] }, { include_blank: "Tous les statuts", selected: params[:status] }, { data: { action: "change->auto-submit#submit" } } %>
+  <% end %>
+</div>
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead><tr><th>Référence</th><th>Client</th><th>Date</th><th>Articles</th><th>Statut commande</th><th>Statut paiement</th><th>Total</th><th></th></tr></thead>
+    <tbody>
+      <% @orders.each do |order| %>
+        <% payment = order.latest_payment %>
+        <tr>
+          <td><%= order.public_token.first(8).upcase %></td>
+          <td><%= order.customer_name %><br><small class="muted"><%= order.email %></small></td>
+          <td><%= l(order.created_at, format: :short) %></td>
+          <td><%= order.order_items.sum(&:quantity) %></td>
+          <td><span class="status-pill <%= order.status %>"><%= order_status_label(order.status) %></span></td>
+          <td><% if payment %><span class="status-pill <%= payment.status %>"><%= payment.status %></span><% else %><span class="muted">—</span><% end %></td>
+          <td><%= money(order.total_cents) %></td>
+          <td><%= link_to "Ouvrir", admin_order_path(order), class: "text-link" %></td>
+        </tr>
+      <% end %>
+      <% if @orders.none? %>
+        <tr><td colspan="8" class="admin-table-empty"><%= params[:status].present? ? "Aucune commande pour ce statut." : "Aucune commande pour le moment." %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

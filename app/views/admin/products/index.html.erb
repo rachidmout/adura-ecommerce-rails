@@ -1,0 +1,93 @@
+<div class="admin-title">
+  <div><p class="eyebrow">Catalogue</p><h1>Produits</h1></div>
+  <div class="admin-title-actions">
+    <%= link_to "Édition rapide", admin_catalog_variants_path, class: "button button-secondary" %>
+    <%= link_to "Nouveau produit", new_admin_product_path, class: "button button-primary" %>
+  </div>
+</div>
+
+<%= form_with url: admin_products_path, method: :get, data: { controller: "auto-submit" }, class: "admin-filters" do |form| %>
+  <div class="field">
+    <%= form.label :q, "Recherche" %>
+    <%= form.search_field :q, value: params[:q], placeholder: "Nom ou marque…", data: { action: "keydown.enter->auto-submit#submit" } %>
+  </div>
+  <div class="field">
+    <%= form.label :brand, "Marque" %>
+    <%= form.collection_select :brand, @brands, :id, :name, { include_blank: "Toutes", selected: params[:brand] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :family, "Famille" %>
+    <%= form.collection_select :family, @families, :id, :name, { include_blank: "Toutes", selected: params[:family] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :audience, "Genre" %>
+    <%= form.select :audience, [ [ "Femme", "women" ], [ "Homme", "men" ], [ "Mixte", "unisex" ] ], { include_blank: "Tous", selected: params[:audience] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :status, "Statut" %>
+    <%= form.select :status, Product.statuses.keys, { include_blank: "Tous", selected: params[:status] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field">
+    <%= form.label :availability, "Stock" %>
+    <%= form.select :availability, [ [ "En stock", "in_stock" ], [ "Rupture", "out_of_stock" ] ], { include_blank: "Tous", selected: params[:availability] }, { data: { action: "change->auto-submit#submit" } } %>
+  </div>
+  <div class="field admin-filter-check">
+    <%= form.check_box :low_stock, { checked: params[:low_stock] == "1", data: { action: "change->auto-submit#submit" } }, "1", "0" %>
+    <%= form.label :low_stock, "Stock faible (≤ #{ProductVariant::LOW_STOCK_THRESHOLD})" %>
+  </div>
+  <% if params.values_at(:q, :brand, :family, :audience, :status, :availability).any?(&:present?) || params[:low_stock] == "1" %>
+    <%= link_to admin_products_path, class: "admin-filter-reset" do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      Effacer
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="admin-table-wrap">
+  <table class="admin-table admin-table-wide">
+    <thead>
+      <tr><th></th><th>Produit</th><th>Marque</th><th>Famille</th><th>Formats</th><th>Disponible</th><th>Prix</th><th>Statut</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <% @products.each do |product| %>
+        <% prices = product.product_variants.map(&:price_cents) %>
+        <tr>
+          <td>
+            <% if product.primary_image&.file&.attached? %>
+              <%= product_image(product, class_name: "admin-thumb") %>
+            <% else %>
+              <div class="admin-thumb admin-thumb-placeholder">Pas de photo</div>
+            <% end %>
+          </td>
+          <td><strong><%= product.name %></strong><br><small class="muted"><%= product.slug %></small></td>
+          <td><%= product.brand.name %></td>
+          <td><%= translated_family_name(product.primary_family) || "—" %></td>
+          <td><% product.product_variants.each do |variant| %><span class="format-badge"><%= variant.label %></span><% end %></td>
+          <td><%= product.product_variants.sum(&:available_stock_quantity) %></td>
+          <td>
+            <% if prices.empty? %>—<% elsif prices.min == prices.max %><%= money(prices.min) %><% else %><%= money(prices.min) %>–<%= money(prices.max) %><% end %>
+          </td>
+          <td><span class="status-pill <%= product.status %>"><%= product.status %></span></td>
+          <td>
+            <div class="admin-row-actions">
+              <%= link_to "Modifier", edit_admin_product_path(product), class: "text-link" %>
+              <%= link_to "Variantes", admin_product_variants_path(product), class: "text-link" %>
+              <% if product.published? %><%= link_to "Voir", product_path(product), target: "_blank", rel: "noopener", class: "text-link" %><% end %>
+              <%= button_to "Dupliquer", duplicate_admin_product_path(product), method: :post, class: "text-link", data: { turbo_confirm: "Dupliquer #{product.name} en brouillon ?" } %>
+              <%= button_to "Archiver", admin_product_path(product), method: :delete, class: "text-link danger-link", data: { turbo_confirm: "#{product.name} sera archivé et retiré du site. Continuer ?" } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @products.none? %>
+        <tr><td colspan="9" class="admin-table-empty">
+          <% if params.values_at(:q, :brand, :family, :audience, :status, :availability).any?(&:present?) || params[:low_stock] == "1" %>
+            Aucun produit ne correspond à ces filtres. <%= link_to "Effacer les filtres", admin_products_path, class: "text-link" %>
+          <% else %>
+            <p>Le catalogue est vide pour le moment.</p><%= link_to "Créer un produit", new_admin_product_path, class: "button button-small button-primary" %>
+          <% end %>
+        </td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

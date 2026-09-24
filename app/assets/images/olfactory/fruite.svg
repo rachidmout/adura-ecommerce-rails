@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 210" role="img" aria-labelledby="title">
+  <title id="title">Illustration de fruits rouges et d’agrumes</title>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8e7dd"/><stop offset="1" stop-color="#d99b82"/></linearGradient></defs>
+  <rect width="320" height="210" rx="28" fill="url(#bg)"/><circle cx="230" cy="101" r="55" fill="#f8ce87"/><circle cx="230" cy="101" r="39" fill="none" stroke="#fff4d8" stroke-width="4"/>
+  <path d="M230 62v78M191 101h78M203 74l55 55M258 74l-55 55" stroke="#fff4d8" stroke-width="2"/>
+  <circle cx="103" cy="123" r="34" fill="#9d3441"/><circle cx="151" cy="143" r="27" fill="#c0525e"/>
+  <path d="M104 88c7-25 25-35 44-33-9 19-22 31-44 33Z" fill="#536d45"/><path d="M107 93c-10-18-26-24-42-19 9 14 22 22 42 19Z" fill="#72845a"/>
+</svg>

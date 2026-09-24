@@ -1,0 +1,8 @@
+<% copy = local_assigns[:copy].to_s %>
+<% if copy.present? %>
+  <section class="shell seo-hub-copy" aria-label="<%= t("seo.hub_copy_aria") %>">
+    <% copy.split("\n\n").each do |paragraph| %>
+      <p><%= paragraph %></p>
+    <% end %>
+  </section>
+<% end %>

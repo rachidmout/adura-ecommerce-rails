@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title>Administration · ADURA</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <%= favicon_link_tag "favicon.png", type: "image/png" %>
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="admin-body">
+    <% if session[:admin_user_id].present? %>
+      <div class="admin-shell">
+        <aside class="admin-sidebar">
+          <div class="admin-sidebar-brand"><strong>ADURA</strong><span>Admin</span></div>
+          <nav class="admin-sidebar-nav">
+            <% dashboard_active = current_page?(admin_root_path) %>
+            <%= link_to admin_root_path, class: "admin-nav-link #{"is-active" if dashboard_active}", aria: { current: ("page" if dashboard_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M12 19V5M20 19v-6" /></svg>
+              Tableau de bord
+            <% end %>
+            <% products_active = params[:controller].in?(%w[admin/products admin/variants admin/product_images]) %>
+            <%= link_to admin_products_path, class: "admin-nav-link #{"is-active" if products_active}", aria: { current: ("page" if products_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4M11 3v2.3c0 .4-.2.8-.5 1l-1.5 1.1c-.6.4-1 1.1-1 1.8V19a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V9.2c0-.7-.4-1.4-1-1.8L13.5 6.3c-.3-.2-.5-.6-.5-1V3" /></svg>
+              Produits
+            <% end %>
+            <% quick_edit_active = params[:controller] == "admin/catalog_variants" %>
+            <%= link_to admin_catalog_variants_path, class: "admin-nav-link #{"is-active" if quick_edit_active}", aria: { current: ("page" if quick_edit_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7 16l3-3 3 2 4-5" /><path d="M17 10h3v3" /></svg>
+              Édition rapide
+            <% end %>
+            <% marketing_video_jobs_active = params[:controller] == "admin/marketing_video_jobs" %>
+            <%= link_to admin_marketing_video_jobs_path, class: "admin-nav-link #{"is-active" if marketing_video_jobs_active}", aria: { current: ("page" if marketing_video_jobs_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m10 9 5 3-5 3Z" /></svg>
+              Vidéos marketing
+            <% end %>
+            <% analytics_active = params[:controller] == "admin/analytics" %>
+            <%= link_to admin_analytics_path, class: "admin-nav-link #{"is-active" if analytics_active}", aria: { current: ("page" if analytics_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M12 19V5M20 19v-6" /><path d="M3 21h18" /></svg>
+              Analytics
+            <% end %>
+            <% shipping_active = params[:controller].start_with?("admin/shipping_") %>
+            <%= link_to admin_shipping_configuration_path, class: "admin-nav-link #{"is-active" if shipping_active}", aria: { current: ("page" if shipping_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17h18M5 17V8l7-4 7 4v9M9 17v-5h6v5" /></svg>
+              Livraison
+            <% end %>
+            <% orders_active = params[:controller] == "admin/orders" %>
+            <%= link_to admin_orders_path, class: "admin-nav-link #{"is-active" if orders_active}", aria: { current: ("page" if orders_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8 12 3l9 5-9 5-9-5Z" /><path d="M3 8v9l9 5 9-5V8" /><path d="M12 13v9" /></svg>
+              Commandes
+            <% end %>
+            <% promos_active = params[:controller] == "admin/promo_codes" %>
+            <%= link_to admin_promo_codes_path, class: "admin-nav-link #{"is-active" if promos_active}", aria: { current: ("page" if promos_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z" /><path d="M8 7V5h8v2M8 12h8M12 9v6" /></svg>
+              Promos
+            <% end %>
+            <% reviews_active = params[:controller] == "admin/reviews" %>
+            <%= link_to admin_reviews_path, class: "admin-nav-link #{"is-active" if reviews_active}", aria: { current: ("page" if reviews_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 5.1L20 9l-4 3.9.9 5.5-4.9-2.6L7.1 18.4l.9-5.5L4 9l5.5-.9z" /></svg>
+              Avis
+            <% end %>
+            <% seo_active = params[:controller] == "admin/seo" %>
+            <%= link_to admin_seo_path, class: "admin-nav-link #{"is-active" if seo_active}", aria: { current: ("page" if seo_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4M8 11h6M11 8v6" /></svg>
+              SEO
+            <% end %>
+            <% families_active = params[:controller] == "admin/olfactory_families" %>
+            <%= link_to admin_olfactory_families_path, class: "admin-nav-link #{"is-active" if families_active}", aria: { current: ("page" if families_active) } do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c5-3 7-7.2 7-12-5 0-9 2-11 6-1.3 2.5-.8 4.8 4 6Z" /><path d="M5 3c4 0 7 2.2 8 6" /></svg>
+              Familles
+            <% end %>
+          </nav>
+          <div class="admin-sidebar-footer">
+            <%= link_to root_path, class: "admin-nav-link", target: "_blank", rel: "noopener noreferrer" do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+              Retour à la boutique
+            <% end %>
+            <%= button_to admin_logout_path, method: :delete, class: "admin-logout-button" do %>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3M16 17l5-5-5-5M21 12H9" /></svg>
+              Déconnexion
+            <% end %>
+          </div>
+        </aside>
+        <div class="admin-content">
+          <main class="admin-main">
+            <% flash.each do |type, message| %><div class="flash flash-<%= type %>" role="<%= type.to_sym == :alert ? "alert" : "status" %>"><%= message %></div><% end %>
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <% flash.each do |type, message| %><div class="flash flash-<%= type %>" role="<%= type.to_sym == :alert ? "alert" : "status" %>"><%= message %></div><% end %>
+      <%= yield %>
+    <% end %>
+  </body>
+</html>

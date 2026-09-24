@@ -1,0 +1,36 @@
+<% if @current_family %>
+  <% content_for :title, family_meta_title(@current_family) %>
+  <% content_for :meta_description, family_meta_description(@current_family) %>
+  <% content_for :canonical, family_catalog_url(slug: @current_family.slug) %>
+<% elsif @current_audience %>
+  <% audience_segment = ProductsController::AUDIENCE_SEGMENTS.key(@current_audience) %>
+  <% content_for :title, audience_hub_title(@current_audience) %>
+  <% content_for :meta_description, audience_hub_description(@current_audience) %>
+  <% content_for :canonical, audience_catalog_url(audience: audience_segment) %>
+<% else %>
+  <% content_for :title, catalog_hub_title %>
+  <% content_for :meta_description, catalog_hub_description %>
+<% end %>
+<section class="page-hero"><div class="shell"><p class="eyebrow"><%= t("home.index.selection.eyebrow") %></p><h1><%= @current_family ? family_hub_heading(@current_family) : (@current_audience ? audience_hub_heading(@current_audience) : catalog_hub_heading) %></h1><p><%= @current_family ? family_hub_intro(@current_family) : (@current_audience ? audience_hub_intro(@current_audience) : catalog_hub_intro) %></p></div></section>
+<% catalog_filter_keys = %w[q family brand model audience max_price] %>
+<% no_catalog_filter = catalog_filter_keys.none? { |key| request.query_parameters[key].present? } %>
+<% if no_catalog_filter && @current_family.nil? && @current_audience.nil? %>
+  <section class="commercial-links-shell shell" aria-labelledby="commercial-links-title">
+    <p class="eyebrow"><%= t("commercial_pages.explore_label") %></p>
+    <h2 id="commercial-links-title"><%= t("commercial_pages.catalog_links_heading") %></h2>
+    <div class="commercial-page-links">
+      <%= link_to t("commercial_pages.gourmands.heading"), gourmand_perfumes_path, class: "text-link" %>
+      <%= link_to t("commercial_pages.lattafa.heading"), lattafa_perfumes_path, class: "text-link" %>
+      <%= link_to t("commercial_pages.dubai.heading"), dubai_perfumes_path, class: "text-link" %>
+    </div>
+  </section>
+<% end %>
+<section class="catalog shell"<% if @analytics_catalog_search_event %> data-controller="catalog-analytics" data-catalog-analytics-search-value="<%= @analytics_catalog_search_event.to_json %>"<% end %>>
+  <aside class="catalog-filters" data-controller="filter-panel"><button class="catalog-filter-toggle" type="button" data-filter-panel-target="toggle" data-action="filter-panel#toggle" aria-expanded="false" aria-controls="catalog-filter-form"><span><%= t("products.index.filters") %></span><span class="catalog-filter-toggle-icon" aria-hidden="true">⌄</span></button><%= form_with url: products_path, method: :get, id: "catalog-filter-form", class: "catalog-filter-form", data: { controller: "auto-submit" } do |form| %><div class="field"><%= form.label :q, t("products.index.search_label") %><%= form.search_field :q, value: params[:q], placeholder: t("products.index.search_placeholder"), data: { action: "keydown.enter->auto-submit#submit" } %></div><div class="field"><%= form.label :family, t("products.index.family") %><%= form.collection_select :family, @families, :slug, :name, { include_blank: t("products.index.all_families"), selected: @current_family&.slug }, { data: { action: "change->auto-submit#submit" } } %></div><div class="field"><%= form.label :brand, t("products.index.brand") %><%= form.collection_select :brand, @brands, :id, :name, { include_blank: t("products.index.all_brands"), selected: params[:brand] }, { data: { action: "change->auto-submit#submit" } } %></div><div class="field"><%= form.label :model, t("products.index.model") %><%= form.collection_select :model, @models, :slug, :name, { include_blank: t("products.index.all_models"), selected: params[:model] }, { data: { action: "change->auto-submit#submit" } } %></div><div class="field"><%= form.label :audience, t("products.index.audience") %><%= form.select :audience, [[t("products.index.women"), "women"], [t("products.index.men"), "men"], [t("products.index.unisex"), "unisex"]], { include_blank: t("products.index.all_audiences"), selected: @current_audience }, { data: { action: "change->auto-submit#submit" } } %></div><div class="field"><%= form.label :max_price, t("products.index.budget") %><%= form.select :max_price, [[t("products.index.up_to_20"), 2000], [t("products.index.up_to_25"), 2500], [t("products.index.up_to_35"), 3500]], { include_blank: t("products.index.all_budgets"), selected: params[:max_price] }, { data: { action: "change->auto-submit#submit" } } %></div><div class="filter-reset-wrap"><%= link_to products_path, class: "filter-reset" do %><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg><%= t("products.index.clear_filters") %><% end %></div><% end %><div class="filter-help"><span>✦</span><p><strong><%= t("products.index.hesitate") %></strong><br><%= t("products.index.hesitate_text") %></p><%= link_to t("products.index.guide_link"), quiz_path %></div></aside>
+  <% active_filters = [] %><% active_filters << "#{t("products.index.search_label")} : #{params[:q]}" if params[:q].present? %><% active_filters << "#{t("products.index.family")} : #{translated_family_name(@current_family)}" if @current_family %><% active_filters << "#{t("products.index.brand")} : #{@brands.find { |brand| brand.id.to_s == params[:brand].to_s }&.name}" if params[:brand].present? && @brands.any? { |brand| brand.id.to_s == params[:brand].to_s } %><% active_filters << "#{t("products.index.model")} : #{@models.find { |model| model.slug == params[:model] }&.name}" if params[:model].present? && @models.any? { |model| model.slug == params[:model] } %><% active_filters << "#{t("products.index.audience")} : #{translated_audience(@current_audience)}" if @current_audience.present? %><% budget_labels = { "2000" => t("products.index.up_to_20"), "2500" => t("products.index.up_to_25"), "3500" => t("products.index.up_to_35") } %><% active_filters << "#{t("products.index.budget")} : #{budget_labels[params[:max_price]]}" if budget_labels.key?(params[:max_price]) %>
+  <div class="catalog-results"><div class="catalog-results-head"><div><p class="eyebrow"><%= t("products.index.catalog") %></p><h2><%= t("products.index.results_count", count: @products.size) %></h2></div></div><% if active_filters.any? %><div class="catalog-active-filters"><span><%= t("products.index.active_filters", count: active_filters.size) %></span><p><%= active_filters.join(" · ") %></p><%= link_to t("products.index.clear_filters"), products_path, class: "filter-reset" %></div><% end %><% if @products.any? %><div class="product-grid catalog-grid"><%= render partial: "card", collection: @products, as: :product %></div><% else %><div class="empty-state"><span>◇</span><h3><%= t("products.index.empty_title") %></h3><p><%= t("products.index.empty_text") %></p><%= link_to t("products.index.show_all"), products_path, class: "button button-primary" %></div><% end %></div>
+</section>
+<% if no_catalog_filter %>
+  <% hub_copy = @current_family ? family_hub_body(@current_family) : (@current_audience ? audience_hub_body(@current_audience) : catalog_hub_body) %>
+  <%= render "seo_hub_copy", copy: hub_copy %>
+<% end %>

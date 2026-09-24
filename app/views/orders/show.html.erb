@@ -1,0 +1,39 @@
+<% token = @order.public_token.first(8).upcase %>
+<% completed = @order.paid? || @order.shipped? %>
+<% payment_interrupted = params[:cancelled].present? && !completed && !@order.cancelled? %>
+<% content_for :title, t("orders.show.title", token: token) %>
+
+<section class="confirmation shell"<% if completed %> data-controller="ecommerce-analytics" data-ecommerce-analytics-purchase-value="<%= analytics_purchase_event(@order).to_json %>"<% end %>>
+  <div class="confirmation-icon" aria-hidden="true"><%= completed ? "✓" : "…" %></div>
+  <p class="eyebrow"><%= t("orders.show.reference", token: token) %></p>
+
+  <% if completed %>
+    <h1><%= t("orders.show.paid_title") %></h1>
+    <p><%= t("orders.show.paid_text", name: @order.first_name) %></p>
+    <div class="notice notice-success"><strong><%= t("orders.show.paid_total", amount: money(@order.total_cents)) %></strong></div>
+  <% elsif @order.cancelled? %>
+    <h1><%= t("orders.show.cancelled_title") %></h1>
+    <p><%= t("orders.show.cancelled_text") %></p>
+  <% elsif payment_interrupted %>
+    <h1><%= t("orders.show.interrupted_title") %></h1>
+    <p><%= t("orders.show.interrupted_text") %></p>
+    <div class="confirmation-actions">
+      <%= button_to t("orders.show.resume_cta"), resume_order_path(@order.public_token), method: :post, class: "button button-primary", form: { data: { turbo: false } } if @order.payable? %>
+      <%= link_to t("orders.show.back_to_cart"), cart_path, class: "button button-secondary" %>
+    </div>
+  <% else %>
+    <h1><%= t("orders.show.pending_title") %></h1>
+    <p><%= t("orders.show.pending_text") %></p>
+    <%= button_to t("orders.show.resume_cta"), resume_order_path(@order.public_token), method: :post, class: "button button-primary", form: { data: { turbo: false } } if @order.payable? %>
+  <% end %>
+
+  <div class="order-summary confirmation-summary">
+    <h2><%= t(payment_interrupted ? "orders.show.cart_summary" : "orders.show.summary") %></h2>
+    <ul>
+      <% @order.order_items.each do |item| %>
+        <li><%= item.quantity %> × <%= item.product_name %> · <%= money(item.line_total_cents) %></li>
+      <% end %>
+    </ul>
+    <p><strong><%= t("orders.show.total", amount: money(@order.total_cents)) %></strong></p>
+  </div>
+</section>

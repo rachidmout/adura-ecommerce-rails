@@ -1,0 +1,13 @@
+<h1 style="font-family:Georgia,serif;font-weight:normal">Votre commande est expédiée</h1>
+<p>Bonjour <%= @order.first_name %>,</p>
+<p>Votre commande <strong><%= @order.public_token.first(8).upcase %></strong> a été remise à <strong><%= @order.shipping_carrier %></strong>.</p>
+<p><strong>Numéro de suivi :</strong> <%= @order.tracking_number %></p>
+<% if @order.tracking_url %>
+  <p><%= link_to "Suivre mon colis", @order.tracking_url, style: "display:inline-block;padding:12px 18px;background:#1d1b19;color:#ffffff;text-decoration:none;border-radius:999px" %></p>
+<% end %>
+<% if (relay_point = @order.relay_point) %>
+  <p><strong>Livraison en point relais</strong><br><%= relay_point.relay_name %><br><%= relay_point.relay_address_line1 %><% if relay_point.relay_address_line2.present? %><br><%= relay_point.relay_address_line2 %><% end %><br><%= relay_point.relay_postal_code %> <%= relay_point.relay_city %><br>Code relais : <%= relay_point.relay_id %></p>
+<% else %>
+  <p><strong>Adresse de livraison</strong><br><%= @order.address_line1 %><% if @order.address_line2.present? %><br><%= @order.address_line2 %><% end %><br><%= @order.postal_code %> <%= @order.city %><br><%= @order.shipping_country_name %></p>
+<% end %>
+<p>Merci de votre confiance,<br>ADURA</p>

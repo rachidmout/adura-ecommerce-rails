@@ -1,0 +1,109 @@
+<div class="admin-title">
+  <div>
+    <p class="eyebrow"><%= link_to "← Vidéos marketing", admin_marketing_video_jobs_path, class: "text-link" %></p>
+    <h1><%= @marketing_video_job.product_name %></h1>
+    <span class="status-pill <%= @marketing_video_job.status %>"><%= @marketing_video_job.queued_for_generation? ? "Prêt pour génération" : @marketing_video_job.status.humanize %></span>
+  </div>
+</div>
+
+<p class="admin-page-lead">
+  <%= if @marketing_video_job.queued_for_generation?
+        "Cette demande est prête à être envoyée à Higgsfield."
+      elsif @marketing_video_job.generating?
+        "La génération Higgsfield est en cours."
+      elsif @marketing_video_job.generated?
+        "La vidéo a été générée. Aucune publication automatique n’est prévue."
+      elsif @marketing_video_job.failed?
+        "La génération Higgsfield a échoué. Vous pouvez la relancer après vérification."
+      else
+        "Cette demande peut être validée ou rejetée manuellement. Aucune génération Higgsfield n’est lancée automatiquement."
+      end %>
+</p>
+
+<section class="admin-panel">
+  <div class="admin-form-grid">
+    <div><p class="field-hint">Objectif</p><p><%= @marketing_video_job.objective.presence || "—" %></p></div>
+    <div><p class="field-hint">Angle marketing</p><p><%= @marketing_video_job.marketing_angle.presence || "—" %></p></div>
+    <div><p class="field-hint">Format</p><p><%= @marketing_video_job.duration_seconds %> s · <%= @marketing_video_job.aspect_ratio %></p></div>
+    <div><p class="field-hint">Watermark</p><p><%= @marketing_video_job.watermark_text %> · <%= @marketing_video_job.watermark_position %></p></div>
+  </div>
+
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Hook</h2></div>
+    <p><%= @marketing_video_job.hook.presence || "—" %></p>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Script</h2></div>
+    <p class="admin-preformatted"><%= @marketing_video_job.script.presence || "—" %></p>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Prompt Higgsfield</h2></div>
+    <p class="admin-preformatted"><%= @marketing_video_job.higgsfield_prompt %></p>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Texte à l’écran</h2></div>
+    <p><%= @marketing_video_job.screen_texts.presence&.join(" · ") || "—" %></p>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Caption et hashtags</h2></div>
+    <p class="admin-preformatted"><%= @marketing_video_job.caption.presence || "—" %></p>
+    <p class="muted"><%= @marketing_video_job.hashtags.presence&.map { |hashtag| "##{hashtag.delete_prefix("#")}" }&.join(" ") || "—" %></p>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Image de référence</h2></div>
+    <% if (reference_image_url = safe_marketing_video_reference_image_url(@marketing_video_job)) %>
+      <%= image_tag reference_image_url, class: "admin-video-reference-image", alt: "Image de référence pour #{@marketing_video_job.product_name}" %>
+      <p><%= link_to "Ouvrir l’image de référence", reference_image_url, class: "text-link", target: "_blank", rel: "noopener noreferrer" %></p>
+    <% else %>
+      <p class="muted">L’image de référence n’est pas disponible.</p>
+    <% end %>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Génération Higgsfield</h2></div>
+    <div class="admin-form-grid">
+      <div><p class="field-hint">Fournisseur</p><p><%= @marketing_video_job.provider %></p></div>
+      <div><p class="field-hint">Identifiant fournisseur</p><p><%= @marketing_video_job.provider_job_id.presence || "—" %></p></div>
+      <div><p class="field-hint">Lancée le</p><p><%= @marketing_video_job.generation_started_at ? l(@marketing_video_job.generation_started_at, format: :short) : "—" %></p></div>
+      <div><p class="field-hint">Prête le</p><p><%= @marketing_video_job.queued_for_generation_at ? l(@marketing_video_job.queued_for_generation_at, format: :short) : "—" %></p></div>
+    </div>
+    <% if (result_video_url = safe_marketing_video_result_url(@marketing_video_job)) %>
+      <p><%= link_to "Ouvrir la vidéo générée", result_video_url, class: "text-link", target: "_blank", rel: "noopener noreferrer" %></p>
+    <% end %>
+    <% if @marketing_video_job.failed? %>
+      <p class="admin-error-message"><%= @marketing_video_job.error_message.presence || "La génération a échoué." %></p>
+      <% if @marketing_video_job.raw_response.present? %>
+        <div class="admin-form-section">
+          <p class="field-hint">Diagnostic fournisseur</p>
+          <% if (http_status = @marketing_video_job.raw_response["http_status"]) %>
+            <p>Réponse HTTP : <strong><%= http_status %></strong></p>
+          <% end %>
+          <pre class="admin-preformatted"><%= JSON.pretty_generate(@marketing_video_job.raw_response) %></pre>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+  <div class="admin-form-section">
+    <div class="admin-section-head"><h2>Actions</h2></div>
+    <p class="muted">Une génération n’est envoyée à Higgsfield qu’après un clic admin explicite, avec l’intégration activée côté serveur. Aucune publication automatique n’est prévue.</p>
+    <div class="admin-actions" aria-label="Actions de vidéo marketing">
+      <% if @marketing_video_job.pending_review? %>
+        <%= button_to "Valider", approve_admin_marketing_video_job_path(@marketing_video_job), method: :patch, class: "button button-primary", data: { turbo_confirm: "Valider cette demande vidéo ?" } %>
+        <%= button_to "Rejeter", reject_admin_marketing_video_job_path(@marketing_video_job), method: :patch, class: "button button-secondary", data: { turbo_confirm: "Rejeter cette demande vidéo ?" } %>
+      <% else %>
+        <button type="button" class="button button-primary" disabled>Valider</button>
+        <button type="button" class="button button-secondary" disabled>Rejeter</button>
+      <% end %>
+      <% if @marketing_video_job.generatable_by_admin? %>
+        <% generation_label = @marketing_video_job.failed? ? "Relancer avec Higgsfield" : "Générer avec Higgsfield" %>
+        <%= button_to generation_label, generate_admin_marketing_video_job_path(@marketing_video_job), method: :patch, class: "button button-secondary", data: { turbo_confirm: "Envoyer cette demande à Higgsfield ? Cette action peut consommer des crédits." } %>
+      <% else %>
+        <button type="button" class="button button-secondary" disabled title="Disponible après validation humaine ou pendant une génération">Générer avec Higgsfield</button>
+      <% end %>
+      <% if @marketing_video_job.deletable_by_admin? %>
+        <%= button_to "Supprimer la demande", admin_marketing_video_job_path(@marketing_video_job), method: :delete, class: "button button-danger", data: { turbo_confirm: "Supprimer définitivement cette demande vidéo ?" } %>
+      <% else %>
+        <button type="button" class="button button-danger" disabled>Non supprimable</button>
+      <% end %>
+    </div>
+  </div>
+</section>

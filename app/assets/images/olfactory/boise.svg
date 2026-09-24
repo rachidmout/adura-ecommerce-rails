@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 210" role="img" aria-labelledby="title">
+  <title id="title">Illustration de bois, ambre et épices</title>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ead9c6"/><stop offset="1" stop-color="#9d7558"/></linearGradient></defs>
+  <rect width="320" height="210" rx="28" fill="url(#bg)"/><path d="M69 162 177 48l19 18L88 180Z" fill="#6c422d"/><path d="M94 170 202 56l10 9L104 179Z" fill="#b27b4f"/>
+  <path d="M235 157c-34-22-32-48-8-77 29 26 33 51 8 77Z" fill="#d8a74e" opacity=".8"/><path d="M235 151c-14-22-9-41-1-58 11 22 11 41 1 58Z" fill="#fff1bf" opacity=".8"/>
+  <g fill="#4f3125"><circle cx="66" cy="64" r="7"/><circle cx="91" cy="49" r="5"/><circle cx="55" cy="93" r="4"/></g><path d="m260 42 4 10 10 4-10 4-4 10-4-10-10-4 10-4Z" fill="#e1bd69"/>
+</svg>

@@ -1,0 +1,5 @@
+<%= form_with model: [:admin, zone], class: "admin-form" do |form| %>
+  <% if zone.errors.any? %><div class="error-summary"><ul><% zone.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+  <div class="admin-form-grid"><div class="field"><%= form.label :name, "Nom de la zone" %><%= form.text_field :name, required: true, autofocus: true %></div><div class="field"><%= form.label :active, "Zone active" %><%= form.check_box :active %><small class="field-hint">Une zone inactive reste en préparation et n’est pas destinée au moteur futur.</small></div></div>
+  <div class="admin-actions"><%= form.submit "Enregistrer", class: "button button-primary" %><%= link_to "Annuler", admin_shipping_zones_path, class: "button button-secondary" %></div>
+<% end %>

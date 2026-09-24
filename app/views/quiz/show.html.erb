@@ -1,0 +1,15 @@
+<% content_for :title, t("quiz.show.title") %>
+<% content_for :meta_description, t("quiz.show.meta_description") %>
+<section class="quiz-intro shell" data-controller="quiz-analytics" data-quiz-analytics-started-value="<%= analytics_quiz_started_event.to_json %>" data-quiz-analytics-family-slugs-value="<%= @families.map(&:slug).to_json %>">
+  <div class="quiz-intro-copy"><p class="eyebrow"><%= t("quiz.show.eyebrow") %></p><h1><%= t("quiz.show.heading") %></h1><p><%= t("quiz.show.lead") %></p>
+    <%= form_with url: quiz_results_path, method: :post, class: "quiz-question", data: { turbo: false } do |form| %>
+      <fieldset class="quiz-options" data-controller="quiz-family"><legend><%= t("quiz.show.family_legend") %></legend><% @families.each do |family| %><label class="quiz-option" data-quiz-family-target="option"><%= radio_button_tag "quiz[family]", family.slug, false, required: true, data: { action: "change->quiz-family#select quiz-analytics#familySelected", quiz_family_target: "input" } %><span class="quiz-option-mark"></span><span><strong><%= translated_family_name(family) %></strong><small><%= translated_family_description(family).to_s.truncate(70) %></small></span></label><% end %></fieldset>
+      <div class="field"><%= label_tag "quiz_audience", t("quiz.show.audience_label") %><%= select_tag "quiz[audience]", options_for_select([[t("quiz.show.audience_all"), "all"], [t("quiz.show.audience_women"), "women"], [t("quiz.show.audience_men"), "men"], [t("quiz.show.audience_unisex"), "unisex"]]), id: "quiz_audience" %></div>
+      <div class="field"><%= label_tag "quiz_occasion", t("quiz.show.occasion_label") %><%= select_tag "quiz[occasion]", options_for_select([[t("quiz.show.occasion_daily"), "daily"], [t("quiz.show.occasion_work"), "work"], [t("quiz.show.occasion_evening"), "evening"], [t("quiz.show.occasion_gift"), "gift"]]), id: "quiz_occasion" %></div>
+      <div class="field"><%= label_tag "quiz_budget", t("quiz.show.budget_label") %><%= select_tag "quiz[budget]", options_for_select([[t("quiz.show.budget_under_30"), "under_30"], [t("quiz.show.budget_30_40"), "30_40"], [t("quiz.show.budget_40_50"), "40_50"], [t("quiz.show.budget_50_plus"), "50_plus"], [t("quiz.show.budget_open"), "open"]]), id: "quiz_budget", data: { action: "change->quiz-analytics#budgetSelected" } %></div>
+      <%= form.submit t("quiz.show.submit"), class: "button button-primary" %>
+    <% end %>
+    <p class="privacy-note"><%= t("quiz.show.privacy_note") %></p>
+  </div>
+  <div class="quiz-intro-art" aria-hidden="true"><span><%= t("quiz.show.art_fruity") %></span><span><%= t("quiz.show.art_floral") %></span><span><%= t("quiz.show.art_gourmand") %></span><div>✦</div></div>
+</section>

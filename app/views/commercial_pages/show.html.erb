@@ -1,0 +1,46 @@
+<% page_key = @commercial_page.key %>
+<% page_url = commercial_page_url_for(page_key) %>
+<% content_for :title, t("commercial_pages.#{page_key}.title") %>
+<% content_for :meta_description, t("commercial_pages.#{page_key}.meta_description") %>
+<% content_for :canonical, page_url %>
+<% content_for :structured_data do %>
+  <%= render "shared/structured_data_script", schema: breadcrumb_structured_data([ [ t("layout.home").capitalize, root_url ], [ t("products.show.breadcrumb"), products_url ], [ t("commercial_pages.#{page_key}.heading"), page_url ] ]) %>
+  <%= render "shared/structured_data_script", schema: commercial_page_structured_data(page_key, @products, page_url) %>
+<% end %>
+
+<section class="page-hero commercial-page-hero"><div class="shell">
+  <p class="eyebrow"><%= t("commercial_pages.collection_label") %></p>
+  <h1><%= t("commercial_pages.#{page_key}.heading") %></h1>
+  <p><%= t("commercial_pages.#{page_key}.intro") %></p>
+</div></section>
+
+<section class="commercial-page shell">
+  <nav class="breadcrumb" aria-label="<%= t("commercial_pages.breadcrumb") %>">
+    <%= link_to t("layout.home").capitalize, root_path %><span>/</span>
+    <%= link_to t("products.show.breadcrumb"), products_path %><span>/</span>
+    <span aria-current="page"><%= t("commercial_pages.#{page_key}.heading") %></span>
+  </nav>
+
+  <div class="commercial-page-copy">
+    <p><%= t("commercial_pages.#{page_key}.body") %></p>
+  </div>
+
+  <div class="section-heading compact"><div>
+    <p class="eyebrow"><%= t("commercial_pages.collection_label") %></p>
+    <h2><%= t("commercial_pages.products_heading") %></h2>
+  </div></div>
+  <div class="product-grid catalog-grid"><%= render partial: "products/card", collection: @products, as: :product %></div>
+
+  <aside class="commercial-page-explore" aria-labelledby="commercial-page-explore-title">
+    <p class="eyebrow"><%= t("commercial_pages.explore_label") %></p>
+    <h2 id="commercial-page-explore-title"><%= t("commercial_pages.explore_heading") %></h2>
+    <div class="commercial-page-links">
+      <% @related_families.each do |family| %>
+        <%= link_to translated_family_name(family), family_catalog_path(slug: family.slug), class: "text-link" %>
+      <% end %>
+      <% @commercial_page.related_audience_segments.each do |audience, segment| %>
+        <%= link_to translated_audience(audience), audience_catalog_path(audience: segment), class: "text-link" %>
+      <% end %>
+    </div>
+  </aside>
+</section>

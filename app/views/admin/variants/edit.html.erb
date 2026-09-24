@@ -1,0 +1,2 @@
+<div class="admin-title"><div><p class="eyebrow"><%= link_to "← #{@product.name}", edit_admin_product_path(@product), class: "text-link" %></p><h1>Modifier <%= @variant.sku %></h1></div></div>
+<%= render "form", variant: @variant %>

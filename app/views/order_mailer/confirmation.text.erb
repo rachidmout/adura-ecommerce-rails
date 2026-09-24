@@ -1,0 +1,20 @@
+Bonjour <%= @order.first_name %>,
+
+Le paiement de votre commande <%= @order.public_token.first(8).upcase %> est confirmé.
+
+<% @order.order_items.each do |item| %>- <%= item.quantity %> x <%= item.product_name %> : <%= money(item.line_total_cents) %>
+<% end %>
+<% if @order.shipping_method_name.present? %>
+Livraison : <%= @order.shipping_method_name %><% if @order.shipping_carrier_name.present? %> — <%= @order.shipping_carrier_name %><% end %> (<%= @order.shipping_cents.zero? ? "offerte" : money(@order.shipping_cents) %>)
+<% end %>
+<% if (relay_point = @order.relay_point) %>
+Livraison en point relais :
+<%= relay_point.relay_name %>
+<%= relay_point.relay_address_line1 %>
+<% if relay_point.relay_address_line2.present? %><%= relay_point.relay_address_line2 %>
+<% end %><%= relay_point.relay_postal_code %> <%= relay_point.relay_city %>
+Code relais : <%= relay_point.relay_id %>
+<% end %>
+Total : <%= money(@order.total_cents) %>
+
+ADURA vous informera lorsque la commande sera expédiée.

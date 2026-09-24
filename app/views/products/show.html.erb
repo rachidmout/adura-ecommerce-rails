@@ -1,0 +1,91 @@
+<% content_for :title, translated_meta_title(@product) %>
+<% content_for :meta_description, translated_meta_description(@product) %>
+<% content_for :og_type, "product" %>
+<% content_for :og_image, absolute_image_url(@product.primary_image) %>
+<% content_for :structured_data do %>
+  <%= render "shared/structured_data_script", schema: product_structured_data(@product) %>
+  <%= render "shared/structured_data_script", schema: breadcrumb_structured_data([ [ t("layout.home").capitalize, root_url ], [ t("products.show.breadcrumb"), products_url ], [ @product.name, product_url(@product) ] ]) %>
+<% end %>
+<% analytics_default_item = analytics_ecommerce_item(product: @product, variant: @variants.first) %>
+<% analytics_view_item = analytics_ecommerce_event(items: [ analytics_default_item ], value_cents: @variants.first&.price_cents) %>
+<section class="product-detail shell" data-controller="variant ecommerce-analytics" data-ecommerce-analytics-view-item-value="<%= analytics_view_item.to_json %>">
+  <div class="breadcrumb"><%= link_to t("products.show.breadcrumb"), products_path %><span>/</span><span><%= @product.name %></span></div>
+  <% first_variant = @variants.first %>
+  <% gallery_images = first_variant&.gallery_images || [] %>
+  <div class="product-detail-grid">
+    <div class="product-detail-visual">
+      <div class="product-visual-group">
+        <div class="product-visual has-image">
+          <div class="product-gallery-track" data-variant-target="galleryTrack" data-action="scroll->variant#syncGallery" data-gallery-alt="<%= gallery_images.first&.alt_text || @product.name %>">
+            <% if gallery_images.any? %>
+              <% gallery_images.each_with_index do |image, index| %>
+                <div class="product-gallery-slide" data-variant-target="gallerySlide">
+                  <%= responsive_product_image(image, lazy: !index.zero?, widths: [ 480, 720, 960, 1200 ], sizes: "(max-width: 640px) calc(100vw - 26px), (max-width: 980px) min(100vw - 32px, 620px), 50vw", fetchpriority: index.zero? ? "high" : nil, data: { variant_target: "gallery" }) %>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="product-gallery-slide" data-variant-target="gallerySlide">
+                <%= product_image(@product, lazy: false, widths: [ 480, 720, 960, 1200 ], sizes: "(max-width: 640px) calc(100vw - 26px), (max-width: 980px) min(100vw - 32px, 620px), 50vw", fetchpriority: "high", data: { variant_target: "gallery" }) %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        <p class="product-gallery-position" data-variant-target="galleryPosition" aria-live="polite" <%= "hidden" if gallery_images.size < 2 %>>1 / <%= gallery_images.size %></p>
+        <div class="product-gallery-thumbs" role="group" aria-label="<%= t("products.show.view_image") %>" data-variant-target="thumbs" data-image-label="<%= t("products.show.view_image") %>" <%= "hidden" if gallery_images.size < 2 %>><% gallery_images.each_with_index do |image, index| %><button type="button" class="product-gallery-thumb<%= " is-active" if index.zero? %>" data-variant-target="thumb" data-action="variant#showImage" data-image-url="<%= responsive_product_image_url(image, width: 1200) %>" aria-pressed="<%= index.zero? %>" aria-label="<%= t("products.show.view_image") %> <%= index + 1 %>"><%= responsive_product_image(image, alt: "", widths: [ 120 ], sizes: "56px") %></button><% end %></div>
+      </div>
+    </div>
+      <div class="product-detail-copy"><p class="eyebrow"><%= @product.brand.name %></p><h1><%= @product.name %></h1><p class="product-detail-family"><%= translated_family_name(@product.primary_family) %> · <%= translated_audience(@product.perfume_profile.audience) %></p>
+      <% if @product.reviews_count.positive? %><%= link_to "#avis", class: "product-rating-summary" do %><%= star_rating(@product.average_rating) %><span><%= t("products.show.reviews_count", count: @product.reviews_count) %></span><% end %><% end %>
+      <p class="product-detail-description"><%= translated_description(@product) %></p>
+      <div class="product-price-line"><strong data-variant-target="price"><%= first_variant ? money(first_variant.price_cents) : t("products.show.price_to_confirm") %></strong><span data-variant-target="stock"><%= first_variant&.available? ? t("products.show.in_stock") : t("products.show.unavailable") %></span></div>
+      <%= form_with url: cart_items_path, method: :post, class: "purchase-box", data: { variant_target: "form", action: "submit->ecommerce-analytics#addToCart" } do |form| %><div class="variant-choice"><span class="variant-label"><%= t("products.show.choose_format") %></span><div class="variant-options"><% @variants.each_with_index do |variant, index| %><button type="button" class="variant-option <%= 'is-selected' if index.zero? %>" data-variant-target="choice" data-action="variant#select ecommerce-analytics#selectVariant" data-variant-id="<%= variant.id %>" data-variant-label="<%= variant.label %>" data-price="<%= money(variant.price_cents) %>" data-stock-label="<%= variant.available? ? t("products.show.in_stock_count", count: variant.available_stock_quantity) : t("products.show.availability_coming") %>" data-add-label="<%= t("products.show.add_to_cart") %>" data-unavailable-label="<%= t("products.show.unavailable") %>" data-available="<%= variant.available? %>" data-images="<%= variant.gallery_images.map { |image| responsive_product_image_url(image, width: 1200) }.to_json %>" data-ecommerce-analytics-item="<%= analytics_ecommerce_item(product: @product, variant: variant).to_json %>" aria-pressed="<%= index.zero? %>" data-analytics-hook="variant-option" <%= "disabled" unless variant.available? %>><span><%= variant.label %></span><small><%= variant.available? ? t("products.show.in_stock_count", count: variant.available_stock_quantity) : t("products.show.availability_coming") %></small></button><% end %></div></div><%= form.hidden_field :variant_id, value: first_variant&.id, data: { variant_target: "variantId" } %><%= form.hidden_field :quantity, value: 1 %><%= form.submit first_variant&.available? ? t("products.show.add_to_cart") : t("products.show.unavailable"), class: "button button-primary add-button", disabled: !first_variant&.available?, data: { variant_target: "submit", analytics_hook: "product-add-to-cart" } %><div class="product-sticky-cta" data-analytics-hook="product-sticky-cta"><div class="product-sticky-summary"><span data-variant-target="stickyVolume"><%= first_variant&.label %></span><strong data-variant-target="stickyPrice"><%= first_variant ? money(first_variant.price_cents) : t("products.show.price_to_confirm") %></strong><small data-variant-target="stickyStatus"><%= first_variant&.available? ? t("products.show.in_stock_count", count: first_variant.available_stock_quantity) : t("products.show.unavailable") %></small></div><%= form.submit first_variant&.available? ? t("products.show.add_to_cart") : t("products.show.unavailable"), class: "button button-primary product-sticky-submit", disabled: !first_variant&.available?, data: { variant_target: "submit", analytics_hook: "product-add-to-cart" } %></div><% end %>
+      <ul class="product-reassurance"><li>✓ <%= t("home.index.trust_strip.delivery.title") %></li><li>✓ <%= t("home.index.trust_strip.authentic.title") %></li></ul>
+      <% unless @product.available? %>
+        <div class="purchase-fallback"><%= link_to t("products.show.guide_me"), quiz_path, class: "button button-secondary purchase-fallback-cta" %></div>
+      <% end %>
+      <dl class="product-facts"><div><dt><%= t("products.show.format") %></dt><dd><%= @variants.map(&:label).join(", ") %></dd></div><div><dt><%= t("products.show.family") %></dt><dd><%= link_to translated_family_name(@product.primary_family), family_catalog_path(slug: @product.primary_family.slug) %></dd></div><div><dt><%= t("products.show.audience") %></dt><dd><%= link_to translated_audience(@product.perfume_profile.audience), audience_catalog_path(audience: { "women" => "femme", "men" => "homme", "unisex" => "mixte" }.fetch(@product.perfume_profile.audience)) %></dd></div><div><dt><%= t("products.show.concentration") %></dt><dd><%= @product.perfume_profile.concentration&.humanize || t("products.show.to_confirm") %></dd></div></dl>
+      <nav class="product-context-links" aria-label="<%= t("products.show.context_links_aria") %>">
+        <%= link_to t("products.show.context_brand", brand: @product.brand.name), (@product.brand.name.casecmp?("Lattafa") ? lattafa_perfumes_path : products_path(brand: @product.brand_id)) %>
+        <% if @product.primary_family&.slug == "gourmand" %><%= link_to t("products.show.context_gourmand"), gourmand_perfumes_path %><% end %>
+        <%= link_to t("products.show.context_catalog"), products_path %>
+      </nav>
+    </div>
+  </div>
+</section>
+<section class="olfactory-section"><div class="shell olfactory-grid"><div><p class="eyebrow"><%= t("products.show.understand") %></p><h2><%= t("products.show.pyramid_title") %></h2><p class="muted"><%= t("products.show.pyramid_lead") %></p></div><div class="notes-pyramid"><% { top: t("products.show.top_notes"), heart: t("products.show.heart_notes"), base: t("products.show.base_notes") }.each_with_index do |(layer, label), index| %><div><span>0<%= index + 1 %></span><h3><%= label %></h3><p><%= @product.product_olfactory_notes.select { |note| note.layer == layer.to_s }.sort_by(&:position).map { |note| translated_note_name(note.olfactory_note) }.join(" · ").presence || t("products.show.to_confirm") %></p></div><% end %></div></div></section>
+<section class="reviews-section shell" id="avis">
+  <div class="reviews-grid">
+    <div class="reviews-summary">
+      <p class="eyebrow"><%= t("products.show.reviews_title") %></p>
+      <% if @product.reviews_count.positive? %>
+        <div class="reviews-average"><%= star_rating(@product.average_rating) %><strong><%= t("products.show.reviews_average", rating: number_with_precision(@product.average_rating, precision: 1)) %></strong></div>
+        <p class="muted"><%= t("products.show.reviews_count", count: @product.reviews_count) %></p>
+        <ul class="reviews-list">
+          <% @reviews.each do |review| %>
+            <li class="review-item">
+              <%= star_rating(review.rating) %>
+              <p class="review-author"><%= review.author_name %><% if review.verified_purchase? %><span class="review-verified"><%= t("products.show.reviews_verified") %></span><% end %></p>
+              <p class="review-comment"><%= review.comment %></p>
+              <time class="review-date" datetime="<%= review.created_at.iso8601 %>"><%= l(review.created_at, format: :short) %></time>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="muted"><%= t("products.show.reviews_empty") %></p>
+      <% end %>
+    </div>
+    <div class="reviews-form-wrap">
+      <h2><%= t("products.show.reviews_form_title") %></h2>
+      <%= form_with model: Review.new, url: product_reviews_path(@product), class: "reviews-form" do |form| %>
+        <div class="honeypot-field" aria-hidden="true"><%= form.label :nickname %><%= form.text_field :nickname, tabindex: -1, autocomplete: "off" %></div>
+        <div class="field"><%= form.label :author_name, t("products.show.reviews_name_label") %><%= form.text_field :author_name, required: true %></div>
+        <div class="field"><%= form.label :author_email, t("products.show.reviews_email_label") %><%= form.email_field :author_email, required: true %><small><%= t("products.show.reviews_email_hint") %></small></div>
+        <div class="field"><%= form.label :rating, t("products.show.reviews_rating_label") %><%= form.select :rating, (1..5).to_a.reverse.map { |n| [ "#{"★" * n}#{"☆" * (5 - n)}", n ] }, {} %></div>
+        <div class="field"><%= form.label :comment, t("products.show.reviews_comment_label") %><%= form.text_area :comment, required: true %></div>
+        <%= form.submit t("products.show.reviews_submit"), class: "button button-primary" %>
+      <% end %>
+    </div>
+  </div>
+</section>
+<% if @related_products.any? %><section class="section shell"><div class="section-heading"><div><p class="eyebrow"><%= t("products.show.compare_eyebrow") %></p><h2><%= t("products.show.compare_title") %></h2></div></div><div class="product-grid related-grid"><%= render partial: "card", collection: @related_products, as: :product %></div></section><% end %>
+<div class="product-sticky-page-spacer" aria-hidden="true"></div>

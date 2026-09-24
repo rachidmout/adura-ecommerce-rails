@@ -1,0 +1,14 @@
+<%= form_with model: [:admin, @zone, shipping_method], class: "admin-form" do |form| %>
+  <% if shipping_method.errors.any? %><div class="error-summary"><ul><% shipping_method.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+  <div class="admin-form-grid">
+    <div class="field"><%= form.label :name, "Nom" %><%= form.text_field :name, required: true, autofocus: true, placeholder: "Livraison standard" %></div>
+    <div class="field"><%= form.label :carrier_name, "Transporteur" %><%= form.text_field :carrier_name, required: true, placeholder: "Colissimo / La Poste" %></div>
+    <div class="field"><%= form.label :kind, "Type de livraison" %><%= form.select :kind, [["Livraison à domicile", "home_delivery"], ["Point relais", "pickup_point"]], required: true %><small class="field-hint">Le point relais nécessite une sélection par la cliente au checkout.</small></div>
+    <div class="field"><%= form.label :provider, "Intégration transporteur" %><%= form.select :provider, [["Connexion directe", "direct"], ["Sendcloud", "sendcloud"]], required: true %><small class="field-hint">Sendcloud recherche les relais et crée l’étiquette, sans modifier les tarifs ADURA.</small></div>
+    <div class="field"><%= form.label :provider_carrier_code, "Code transporteur Sendcloud" %><%= form.text_field :provider_carrier_code, placeholder: "Ex. mondial_relay" %><small class="field-hint">Requis avec Sendcloud : code retourné par l’API (ex. mondial_relay, colissimo, chronopost).</small></div>
+    <div class="field"><%= form.label :provider_method_id_override, "ID Sendcloud de préférence (facultatif)" %><%= form.text_field :provider_method_id_override, placeholder: "Ex. 8" %><small class="field-hint">Aide de test uniquement : l’ID est revérifié à chaque étiquette et ne doit pas être considéré comme durable.</small></div>
+    <div class="field"><%= form.label :free_shipping_threshold_euros, "Seuil de gratuité (€)" %><%= form.number_field :free_shipping_threshold_euros, value: shipping_method.free_shipping_threshold_cents && shipping_method.free_shipping_threshold_cents / 100.0, min: 0, step: 0.01 %><small class="field-hint">Laissez vide si cette méthode n’offre pas la livraison gratuite.</small></div>
+    <div class="field"><%= form.label :active, "Méthode active" %><%= form.check_box :active %></div>
+  </div>
+  <div class="admin-actions"><%= form.submit "Enregistrer", class: "button button-primary" %><%= link_to "Annuler", admin_shipping_zone_path(@zone), class: "button button-secondary" %></div>
+<% end %>
